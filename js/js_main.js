@@ -764,15 +764,34 @@ function resize_img(){
 
 function desplegarForm(vIdForm){
     var vStrFrom = '';
+    var vItems = [{tipo:101, id:1001, name:'Pergunta de prueba 1', ops:[], func:''},
+                    {tipo:101, id:1002, name:'Pergunta de prueba 2', ops:[], func:''},
+                    {tipo:101, id:1072, name:'Pergunta de prueba 4', ops:[], func:''},
+                    {tipo:101, id:1022, name:'Pergunta de prueba 5', ops:[], func:''},
+                    {tipo:101, id:1032, name:'Pergunta de prueba 6', ops:[], func:''},
+                    {tipo:101, id:1042, name:'Pergunta de prueba 7', ops:[], func:''},
+                    {tipo:101, id:1052, name:'Pergunta de prueba 8', ops:[], func:''},
+                    {tipo:101, id:1062, name:'Pergunta de prueba 9', ops:[], func:''},
 
-    vStrFrom +=  drawObject(101, 'txt1', 'Pregunta 1', [], ''); //'<input type="text" id="txt1" />';
-    vStrFrom +=  drawObject(101, 'txt8', 'Pregunta 2', [], ''); //'<input type="text" id="txt2" />';
-    vStrFrom +=  drawObject(103, 'op1', 'Options 1', [{id:1001, name:'Pruebas1'}, {id:1002, name:'Pruebas2'}], 'chngOp1()');
+                    {tipo:103, id:1004, name:'Pergunta de prueba 4', ops:[{id:1010, name:'Op1'},{id:1012, name:'Op2'},{id:1013, name:'Op3'}], func:''},
+                    {tipo:101, id:1003, name:'Pergunta de prueba 3', ops:[], func:''},
+                    {tipo:104, id:1004, name:'Pergunta de prueba 4', ops:[{id:1010, name:'Op1'},{id:1012, name:'Op2'},{id:1013, name:'Op3'}], func:''},                    
+                    {tipo:105, id:1005, name:'Pergunta de prueba 5', ops:[{id:1110, name:'Op12'},{id:1112, name:'Op22'},{id:1113, name:'Op32'}], func:''}];
+
+    vStrFrom += '<div class="custom-corners"><div class="ui-bar ui-bar-a"><h3>Title </h3></div>';
+    vStrFrom += '<div class="ui-body ui-body-a">';
+    var temp = [];
+    for (j=0; j<vItems.length; j++){
+        temp.push(drawObject(vItems[j].tipo, vItems[j].id, vItems[j].name, vItems[j].ops, vItems[j].func));
+        vStrFrom += temp[j];
+    }
+    
     vStrFrom +=  drawObject(201, 'btn1', 'Enviar', [], 'show()');
     vStrFrom += '<script type="text/javascript">';
     vStrFrom += 'function show(){ alert(\'hello \' + $("#txt1").val() + \'-\'+ $("#txt8").val());  } ';
     vStrFrom += 'function chngOp1(){ if($("#op1").val()=="1001"){ $("#txt8").parent().hide(); $(\'label[for="txt8"]\').hide();}else{ $("#txt8").parent().show(); $(\'label[for="txt8"]\').show(); } }'; 
     vStrFrom += '</script>';
+    vStrFrom += "</div></div>";
 
     switchMenu(0, 100);
 
@@ -799,6 +818,22 @@ function drawObject(vTipo, vId, vNombre, vOptions, vfunc){
                 vStr += '<option value="'+ vOptions[i].id +'">'+ vOptions[i].name +'</option>';
             }
             vStr += '</select>';
+        break;
+        case 104:
+            vStr += '<fieldset data-role="controlgroup"><legend>'+ vNombre +'</legend>';
+            for(i=0; i<vOptions.length; i++){
+                vStr += '<input type="radio" name="'+ vId + '" id="'+ vOptions[i].id +'" value="'+ vOptions[i].id +'">';
+                vStr += '<label for="'+ vOptions[i].id +'">'+ vOptions[i].name +'</label>';
+            }
+            vStr += '</fieldset>';
+        break;
+        case 105:
+            vStr += '<fieldset data-role="controlgroup"><legend>'+ vNombre +'</legend>';
+            for(i=0; i<vOptions.length; i++){
+                vStr += '<input type="checkbox" name="'+ vOptions[i].id + '" id="'+ vOptions[i].id +'">';
+                vStr += '<label for="'+ vOptions[i].id +'">'+ vOptions[i].name +'</label>';
+            }
+            vStr += '</fieldset>';
         break;
         case 201:
             vStr += '<br /><center><button id="'+ vId +'" onclick="'+ vfunc + '" data-theme="b" style="width:60%">'+ vNombre +'</button></center>';
