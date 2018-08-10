@@ -265,7 +265,7 @@ function sendSMS(vMsj, vNumber){
 
 function takePicture(){
     navigator.camera.getPicture(onSuccess, onFail, { quality: 50, sourceType:Camera.PictureSourceType.CAMERA, correctOrientation:true,
-            cameraDirection: Camera.Direction.FRONT});
+            cameraDirection: Camera.Direction.FRONT, allowEdit: true});
 
     function onSuccess(imageURI) {
         displayImage(imageURI)
