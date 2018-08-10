@@ -82,7 +82,9 @@ var app = {
 $(document).ready(function(e){
 
     hide_pags();
-    $("#page").hide();
+    $("#page").show();
+    $('#lbl_title').html('DMS EXPERIENCE');            
+    $("#dvHead").show();
 
     //map = plugin.google.maps.Map.getMap($("#dvMain")); 
 
@@ -117,7 +119,6 @@ $(document).ready(function(e){
                                         logInOut(vDatosUsuario.user, '1');      
                                         
                                         $("#page").show();
-                                        $("#dvHead").show();
                                         $("#dvMain").show();
                                         $("#bg_login").hide();
                                         $("#dvUserName").html(vDatosUsuario.user);
@@ -137,7 +138,6 @@ $(document).ready(function(e){
         }else{ 
 
             $("#page").show();
-            $("#dvHead").show();
         	$("#dvMain").show(); 
         	$("#bg_login").hide(); 
             logInOut(tempLogin.user, '1'); 	            
@@ -284,7 +284,9 @@ function switchMenu(vIdFrom, vIdTo){
     switch(vIdTo)
     {
         case 0:
-            hide_pags();
+            hide_pags();            
+            $('#lbl_title').html('DMS EXPERIENCE');            
+            $("#dvHead").show();
             $("#pag1").show();
         break;
         case 1:            
@@ -305,6 +307,8 @@ function switchMenu(vIdFrom, vIdTo){
         case 3:
             hide_pags();
             $("#pagDMS_forms").show();
+            $('#lbl_title').html('DOCUMENTOS DMS');
+            $("#dvHead").show();
             get_froms();
         break;
     }
