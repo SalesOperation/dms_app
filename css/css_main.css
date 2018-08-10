@@ -270,6 +270,15 @@ d -000000*/
 	background-color: gray;
 }
 
+.btn_acept{
+	background-color: green;
+	color:white;
+}
+
+.btn_acept:hover{
+	background-color: blue;
+}
+
 /* Show priority 1 at 320px (20em x 16px) */
 @media screen and (min-width: 20em) {
    .my-custom-class th.ui-table-priority-1,

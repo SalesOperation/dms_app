@@ -52,9 +52,9 @@
                 <a href="#dvMenu" onclick="resize_img()"><img src="img/menu_icon.png" width="100%" /></a>
             </div>           
         
-            <div id="pag1"
+            <div id="pag1">
                 <h3>DMS Experience</h3>
-                
+                <input type="text" id="txt14" />
             </div><!-- Pagina 1 -->
 
             <!-- Pagina DMS Forms -->
@@ -224,7 +224,11 @@
                     </p>
                 </div>
             </div><!-- Pagina 4 -->
-            
+
+            <div id="dv_forms_template">
+                <label>Form Template</label>
+                <div id="dv_forms_template_content"></div>
+            </div> 
             
         </div>
         <!-- div main -->  
@@ -303,7 +307,7 @@ function resizer(){
 
 
     $("#bg_login").css('min-height', $(window).height());
-    $("#dvContentG").css('min-height', $(window).height()-50);
+    $("#dvContentG").css('min-height', $(window).height()-40);
 
     $("#float_btn").css({'margin-top':vH-110, 'margin-left': vW - 100});
 }  

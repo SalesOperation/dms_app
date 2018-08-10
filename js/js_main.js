@@ -4,6 +4,7 @@ var userWS = '69BA4B9D76B7C3452E2A48B7BF9790FE';
 var pdwWS  = '0BAD6CE456FCFBEF59544697D43E06D1';
 var vFlagTracking = false;
 var vTimerGPS = 30000;
+var vIdFormuladio ='XO';
 //var ws_url = 'http://localhost/ws_so/service_so.php'; 
 var ws_url = 'https://190.4.63.207/ws_so/service_so.php';
 
@@ -85,7 +86,6 @@ $(document).ready(function(e){
     $("#page").show();
     $('#lbl_title').html('DMS EXPERIENCE');            
     $("#dvHead").show();
-
     //map = plugin.google.maps.Map.getMap($("#dvMain")); 
 
     function validaLogin(){
@@ -163,14 +163,14 @@ $(document).ready(function(e){
 function get_froms(){
 
     //Formularios
-    var json_forms = [{id:0, name:"DOFOM4"}, {id:0, name:"FORDIS05"}];
+    var json_forms = [{id:0, name:"DOFOM4"}, {id:10, name:"FORDIS05"}];
     var vStr = '';
     vStr = '<table id="tbl1" border="0" cellspacing="0" width="100%" class="tbl_boc">';
     vStr += '<thead><tr><th></th><th></th></tr></thead>';
     vStr += '<tbody>';
     for (i=0; i< json_forms.length; i++){        
         vStr += '<tr>';
-        vStr += '<td width="90%"><a href="#" onclick="showForm('+ json_forms[i].id +')">'+ json_forms[i].name + '</a></td>';
+        vStr += '<td width="90%"><a href="#" onclick="desplegarForm('+ json_forms[i].id +')">'+ json_forms[i].name + '</a></td>';
         vStr += '<td><img src="img/form_icon.png" width="30px" /></td>';
         vStr += '</tr>';
     }
@@ -187,7 +187,7 @@ function get_froms(){
     vStr += '<tbody>';
     for (i=0; i< json_encs.length; i++){        
         vStr += '<tr>';
-        vStr += '<td width="90%"><a href="#" onclick="showForm('+ json_encs[i].id +')">'+ json_encs[i].name + '</a></td>';
+        vStr += '<td width="90%"><a href="#" onclick="desplegarForm('+ json_encs[i].id +')">'+ json_encs[i].name + '</a></td>';
         vStr += '<td><img src="img/survey_icon.png" width="30px" /></td>';
         vStr += '</tr>';
     }
@@ -213,6 +213,7 @@ function hide_pags(){
     $("#pag2").hide();
     $("#pag1").hide();
     $("#dvHead").hide();
+    $('#dv_forms_template').hide();
 }
 
 
@@ -311,6 +312,12 @@ function switchMenu(vIdFrom, vIdTo){
             $("#dvHead").show();
             get_froms();
         break;
+        case 100:
+            hide_pags();
+            $("#dv_forms_template").show();
+            $('#lbl_title').html('DOCUMENTOS DMS');
+            $("#dvHead").show();
+        break
     }
     $("#dvMenu").panel('close');
 }
@@ -755,4 +762,48 @@ function resize_img(){
     200);
 }
 
+function desplegarForm(vIdForm){
+    var vStrFrom = '';
+
+    vStrFrom +=  drawObject(101, 'txt1', 'Pregunta 1', [], ''); //'<input type="text" id="txt1" />';
+    vStrFrom +=  drawObject(101, 'txt8', 'Pregunta 2', [], ''); //'<input type="text" id="txt2" />';
+    vStrFrom +=  drawObject(103, 'op1', 'Options 1', [{id:1001, name:'Pruebas1'}, {id:1002, name:'Pruebas2'}], 'chngOp1()');
+    vStrFrom +=  drawObject(201, 'btn1', 'Enviar', [], 'show()');
+    vStrFrom += '<script type="text/javascript">';
+    vStrFrom += 'function show(){ alert(\'hello \' + $("#txt1").val() + \'-\'+ $("#txt8").val());  } ';
+    vStrFrom += 'function chngOp1(){ if($("#op1").val()=="1001"){ $("#txt8").parent().hide(); $(\'label[for="txt8"]\').hide();}else{ $("#txt8").parent().show(); $(\'label[for="txt8"]\').show(); } }'; 
+    vStrFrom += '</script>';
+
+    switchMenu(0, 100);
+
+    $('#dv_forms_template_content').html(vStrFrom);
+    $('#dv_forms_template_content').trigger('create');
+
+}
+
+function drawObject(vTipo, vId, vNombre, vOptions, vfunc){
+    var vStr = '';
+    
+    switch(vTipo)
+    {
+        case 101:
+            vStr += '<label for="'+ vId +'">'+ vNombre +'</label><input type="text" id="'+ vId +'" />';
+        break;
+        case 102:
+            vStr += '<label for="'+ vId +'">'+ vNombre +'</label><textarea id="'+ vId +'"></textarea>';
+        break;
+        case 103:
+            vStr += '<label for="'+ vId +'">'+ vNombre +'</label>';
+            vStr += '<select id="'+ vId +'" onchange="'+ vfunc +'">';
+            for(i=0; i<vOptions.length; i++){
+                vStr += '<option value="'+ vOptions[i].id +'">'+ vOptions[i].name +'</option>';
+            }
+            vStr += '</select>';
+        break;
+        case 201:
+            vStr += '<br /><center><button id="'+ vId +'" onclick="'+ vfunc + '" data-theme="b" style="width:60%">'+ vNombre +'</button></center>';
+        break;
+    }    
+    return vStr;
+}
 
