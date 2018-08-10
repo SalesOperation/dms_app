@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title></title>
+
+<link rel="stylesheet" href="css/css_main.css" />
+<link rel="stylesheet" href="css/tigo-theme.min.css" />
+<link rel="stylesheet" href="css/jquery.mobile.icons.min.css" />
+<link rel="stylesheet" href="css/jquery.mobile.structure-1.4.5.min.css" /> 
+<style>
+
+body{
+    margin: 0 auto;
+    padding:0;
+}
+</style>
+<!--<link rel="stylesheet" href="css/jquery.mobile-1.4.5.min.css" /> -->
+
+</head>
+<body onresize="resizer()">
+    <!--- Background  -->
+    <div id="bg_login" style="position:absolute; background-color:#0B0B61; z-index:10; width:100%;" >
+        <!--- Login  -->
+        <div class="c_anime_div" style="width:60%; float:left; padding:0px; margin-top:50px; margin-left:18%" id="frm_login">
+            <center>
+                <img src="img/logo.png" width="115px" height="110px" /><br />
+                <label style="color:white; font-family:sans-serif; font-size:1.1em">SO App</label>
+                <label style="color:white; font-family:verdana; font-size:1.0em"></label>
+            </center>
+            <div style="margin-top:15px"><center>
+                <!--  style="margin-bottom:6px; padding:5px;"-->
+                <input type="text" id="user" placeholder="Usuario"/>
+                <input type="password" id="pwd" placeholder="Clave" />
+                <center><button id="btn_login" data-theme="a" onclick="login()" style="width:65%; background-color: green; color:#FFF; border:gray; height:45px">LogIn</button></center>
+                <br /><center><span id="msj_err" class="ms_alert"></span></center>
+                </center> <br />
+                <br /><span class="version_c"></span>
+            </div>                
+        </div>
+
+    </div>
+    <!-- Fin Login Frame -->
+</body>
+
+
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<script type="text/javascript" src="js/jquery.mobile-1.4.5.min.js"></script>
+<!--<script type="text/javascript" src="cordova.js"></script>-->
+<script type="text/javascript" src="js/js_db.js"></script>
+<script type="text/javascript" src="js/js_login.js"></script>
+<!--<script type="text/javascript" src="js/js_eventos_sms.js"></script>-->
+<!--<script type="text/javascript" src="js/toast.js"></script>-->
+
+<script type="text/javascript">  
+    app.initialize();
+
+    resizer();  
+    
+
+function resizer(){
+
+    $("#bg_login").css('min-height', $(window).height());
+    $("#dvContentG").css('min-height', $(window).height()-45);
+    //resizeMap();
+}  
+
+
+</script>
+</html>

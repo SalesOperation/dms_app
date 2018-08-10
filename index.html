@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title></title>
+
+<link rel="stylesheet" href="css/css_main.css" />
+<!--<link rel="stylesheet" href="css/jquery.mobile-1.4.5.min.css" /> -->
+<link rel="stylesheet" href="css/tigo-theme.min.css" />
+<link rel="stylesheet" href="css/jquery.mobile.icons.min.css" />
+<link rel="stylesheet" href="css/jquery.mobile.structure-1.4.5.min.css" /> 
+
+<style type="text/css">
+
+.tbl_boc tr:nth-child(even){
+    background-color: #F2F2F2;
+}
+
+.tbl_boc td {
+    padding:5px;
+}
+
+.tbl_boc tr:hover{
+    background-color: #CEF6CE;
+}
+
+</style>
+
+
+</head>
+<body onresize="resizer()" >
+<!--- Splash  -->
+<div id="bg_login" style="position:absolute; background-color:#D8D8D8; z-index:10; width:100%;" >
+</div>
+<!-- Fin Login Frame -->
+
+<div data-role="page" data-theme="a" id="page"  hidden>
+
+    <!--<div data-role="header" id="dvHead" data-position="fixed">
+        <div class="ui-grid-a" id="subHead">
+            <a href="#dvMenu" id="btnM" class="ui-btn ui-icon-bars ui-btn-icon-notext ui-nodisc-icon" style="border:none; margin-right:6px; margin-left:6px; display:none"></a>
+            <span id="dvtitle">-</span>
+            <a href="#dvMenuConfig" id="btnM" style="float:right; border:none; margin-right:6px;" class="ui-btn ui-icon-power ui-btn-icon-notext ui-nodisc-icon" onclick="logout()"></a>
+        </div>
+    </div>-->
+    <div role="main" id='dvContentG' class="ui-content" style="padding:0px; background-color: #F2F2F2;">
+        <!-- Dv Main -->
+        <div id="dvMain" style="margin:15px"> 
+            <div id="float_btn" class="hamburger"  >
+                <a href="#dvMenu" onclick="resize_img()"><img src="img/menu_icon.png" width="100%" /></a>
+            </div>           
+        
+            <div id="pag1">
+                <h3>DMS Experience</h3>
+                
+            </div><!-- Pagina 1 -->
+
+            <!-- Pagina DMS Forms -->
+            <div id="pagDMS_forms">
+                <h3>DOCUMENTOS DMS</h3>
+
+                <div data-role="collapsible" data-collapsed="false" data-iconpos="right">
+                    <h4>Formularios</h4>
+                    <div id="tbl_forms">
+                    </div>                        
+                </div>
+                <div data-role="collapsible" data-collapsed="false" data-iconpos="right">
+                    <h4>Encuestas</h4>
+                    <div id="tbl_encs">
+                    </div> 
+                </div>
+            </div><!-- Fin Pagina DMS Forms -->
+
+            <div id="pag2">
+                <div class="cls_tags_vdrs">
+                    <center><label style="font-size:1.1em; font-weight:bold; padding-top:5px">Datos de Desempeño</label></center>
+                </div>
+
+                <div class="cls_tags_vdrs">
+                    <table width="100%" border="0">
+                        <tr>
+                            <td colspan="2" width="45%"><img src="img/salesman.png" width="120px" height="120px" /></td>
+                            <td align="center"><label style="font-family:calibri; font-size:1.2em" id="vdr_name">Nombre Vendedor</label></td>
+                        </tr>
+                    </table>
+                </div>
+                <select id="cb_anoems">
+                    <option value="201804">2018-Abr</option>
+                </select>
+                <div class="cls_tags_vdrs">
+                    <table width="100%" border="0">
+                        <tr>
+                            <td colspan="2" align="center" width="50%"><img src="img/mblicon.png" width="70px" height="70px"  /><br />Prospectos MBL <br /><br /></td>
+                            <td align="center"><label id="lbl_p_mbl" style="font-family:cambria; font-size:2.3em">999999</label></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" align="center"><img src="img/homeicon.png" width="70px" height="70px"  /><br />Prospectos HOME</td>
+                            <td align="center"><label id="lbl_p_home" style="font-family:cambria; font-size:2.3em">999999</label></td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="cls_tags_vdrs">
+                    <table width="100%" cellspacing="0">
+                        <tr style="background-color:gray; color: white;">
+                            <th width="50%">KPI</th>
+                            <th>Ejec.</th>
+                            <th>Meta</th>
+                            <th>Cump.</th>
+                        </tr>
+                    </table>
+                    <div id="tbl_content"> 
+                        <!--<table border="0" width="100%">                                    
+                            <tr>
+                                <td width="50%">Prop. MBL</td>
+                                <td align="center">99</td>
+                                <td align="center">99</td>
+                                <td align="center">99%</td>
+                            </tr>
+                            <tr>
+                                <td>Prop. Home</td>
+                                <td align="center">99</td>
+                                <td align="center">99</td>
+                                <td align="center">99%</td>
+                            </tr>                           
+                        </table>-->
+                    </div>
+                </div>
+
+                <input type="button" id="btn_reload" value="Actualizar" onclick="reloadkpi()"/> 
+            <br /><br /><br />
+            </div><!-- Pagina 2 -->
+
+
+            <div id="pag3">
+                <img src="img/logotigo.png" width="27%" style="min-height:70px;"/>
+                <br />
+
+                <center>
+                    <label id="lbl_tracking">Iniciar Recorrido</label>
+                    <select name="iniTrack" id="iniTrack" data-role="slider" onchange="tracking()" style="padding-top:100px">
+                        <option value="1">Off</option>
+                        <option value="0">On</option>
+                    </select>
+                </center>
+
+                <div id="map_tracking" class="map_tracking" style="width:100%; min-height:300px">
+                    <!--<img src="img/hnmap.png" width="100%" style="position:absolute"/>-->
+                </div>
+
+                <label id="msj" style="position:absolute">Estado Apagado</label>
+         
+                <!--
+                <div>
+                    <img src="img/hnmap.png" width="100%" />
+                </div>
+                <img id="btn_tack" style="margin-top:-50px; margin-left:35%; cursor:pointer" src="img/play.png" width="100px" onclick="tracking()" /> <br />
+                <center><label style="font-family:cambria; align:center" id="msj">Start Tracking</label>  </center>
+                <hr / >
+                <div id="test"></div>
+                -->
+            </div><!-- Pagina 3 -->
+            
+            <div id="pag4" style="margin:-7px">
+                
+                <div data-role="navbar">
+                    <ul>
+                        <li><a href="#" class="ui-btn-active" onclick="subIncidente(0)">Envio Incidente</a></li>
+                        <li><a href="#" onclick="subIncidente(1)">Reporte</a></li>
+                    </ul>
+                </div>
+                <div id="dvIncEnvia" class="ui-body ui-body-a">
+                    <h3>Registro de Incidentes</h3>
+                    <p>
+                        <label>Tipo Incidente</label>
+                        <select id="wTipoIncidente">
+                            <option selected>Error de Plataforma</option>
+                            <option>Problema de Informacion</option>
+                            <option>Otros</option>
+                        </select>
+
+                        <label>Detalle:</label>
+                        <textarea cols="20" rows="10" id="wDetalleIncidente" maxlength="160"></textarea>
+                        Telefono:
+                        <input type="number" id="vTel" placeholder="99999999">
+                        Mensaje:
+                        <textarea cols="20" rows="10" name="textsms" id="vMsj"></textarea>
+                        Archivo
+                        <input type="file" id="vFile" />
+                        <br />
+                        <button class="ui-btn ui-corner-all ui-btn-b" onclick="enviarMensaje()">Enviar</button>
+                    </p>
+                </div>
+
+                <div id="dvIncRep" class="ui-body ui-body-a">
+                    <h3>Reporde de Incidentes</h3>
+                    <p>
+                        <div id="tblIncident">
+                            <table data-role="table" data-mode="columntoggle" class="ui-responsive table-stripe ui-responsive">
+                                <thead>
+                                    <tr><th>Titulo</th>
+                                        <th>Estado</th>
+                                        <th data-priority="1">Responsable</th>
+                                        <th data-priority="2">Ultimo Cambio</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td >Prueba</td>
+                                        <td>En Proceso</td>
+                                        <td>Fausto</td>
+                                        <td>19/Jul/2018</td>
+                                    </tr>
+                                    <tr>
+                                        <td >Prueba 2</td>
+                                        <td>En Proceso</td>
+                                        <td>Fausto</td>
+                                        <td>19/Jul/2018</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <button class="ui-btn ui-corner-all ui-btn-a">Refrescar</button>
+                    </p>
+                </div>
+            </div><!-- Pagina 4 -->
+            
+            
+        </div>
+        <!-- div main -->  
+    </div>
+    <!-- end dvMain -->
+
+
+    <!-- Menu Lateral -->
+    <div data-role="panel" data-display="overlay" id="dvMenu" data-theme="c" style="position: fixed">
+        <ul data-role="listview">
+            <li data-icon="false" style="background-color:#0B0B61; border:0; margin-left:-15px; margin-top:10px; margin-bottom:5px">
+                <table width="100%">
+                    <tr><td><center><label style="color:white">DMS Experience</label></center></td></tr>
+                    <tr><td align="center"><img id="imgUser" src="img/salesman.png" width="60%" style="border-radius:50%; margin:5px"/></td></tr>
+                    <tr><td><div id="dvUserName" style="color:white; text-align:center">User Name</div></td></tr>
+                </table>
+                <label style="color:white; text-align:center; font-size:0.7em">..........</label>
+            </li>
+            <li data-icon="false" style="background-color:#0B0B61; border:0; padding:0">
+                <div class="lbar"></div>
+                <button data-icon="ui-btn ui-btn-icon-left ui-icon-home" style="text-align:left; background-color:#0B0B61;border:0; margin:0; margin-left:5px" onclick="switchMenu(0,0)">Inicio</button>
+                <!--<a href="#"  style="background-color: #0B0B61; border:0" onclick="switchMenu(0,0)"><h3>Home</h3></a>-->
+                <!--<a href="#" style="width:15%; margin:1px; height:40px; float:right; border:0px; align:right; background-color: #0B0B61; border:0" class="ui-btn ui-icon-delete ui-icon-notext" data-rel="close" data-target="#dvMenu"></a>-->
+            </li>
+            <li data-icon="false" style="background-color:#0B0B61; border:0; padding:0">
+                <div class="lbar"></div>
+                <button data-icon="ui-btn ui-btn-icon-left ui-icon-arrow-u-r" style="text-align:left; background-color:#0B0B61; border:0; margin:0; margin-left:5px;" onclick="switchMenu(0,3)">Formularios DMS</button>
+                <!--<a href="#" style="background-color: #0B0B61; border:0; border-top:solid thin #0A0A2A" onclick="switchMenu(1,1)"></a>-->
+            </li>
+            <!--<li data-icon="false" style="background-color:#0B0B61; border:0; padding:0">
+                <div class="lbar"></div>
+                <button data-icon="ui-btn ui-btn-icon-left ui-icon-alert" style="text-align:left; background-color:#0B0B61; border:0; margin:0; margin-left:5px;" onclick="switchMenu(0,2)">Reporte KPIs</button>
+                <a href="#" style="background-color: #0B0B61; border:0; border-top:solid thin #0A0A2A" onclick="switchMenu(1,1)"></a>
+            </li>-->
+            <!--
+            <li data-icon="false" style="background-color:#0B0B61; border:0; padding:0">
+                <div class="lbar"></div>
+                <button data-icon="ui-btn ui-btn-icon-left ui-icon-arrow-u-r" style="text-align:left; background-color:#0B0B61; border:0; margin:0; margin-left:5px;" onclick="switchMenu(0,1)">HORUS</button>
+                <a href="#" style="background-color: #0B0B61; border:0; border-top:solid thin #0A0A2A" onclick="switchMenu(1,1)"></a>
+            </li>
+            <li data-icon="false" style="background-color:#0B0B61; border:0; padding:0">
+                <div class="lbar"></div>
+                <button data-icon="ui-btn ui-btn-icon-left ui-icon-alert" style="text-align:left; background-color:#0B0B61; border:0; margin:0; margin-left:5px;" onclick="switchMenu(0,2)">Incidentes</button>
+                <a href="#" style="background-color: #0B0B61; border:0; border-top:solid thin #0A0A2A" onclick="switchMenu(1,1)"></a>
+            </li>-->
+            <li data-icon="false" style="background-color:#0B0B61; border:0; padding:0">
+                <br /><br />
+            </li>
+            <li data-icon="false" style="background-color:#0B0B61; border:0; padding:0">
+                <div class="lbar"></div>
+                <button data-icon="ui-btn ui-btn-icon-left ui-icon-power" style="text-align:left; background-color:#0B0B61; border:0; margin:0; margin-left:5px" onclick="logout()">Cerrar Sesion</button>
+            </li>            
+        </ul>
+    </div>
+    <!-- Fin Menu -->
+    
+</div>
+
+</body>
+
+<!--<script type="text/javascript" src="cordova.js"></script>-->
+<script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+<script type="text/javascript" src="js/js_main.js"></script>
+<script type="text/javascript" src="js/js_db.js"></script>
+<!--<script type="text/javascript" src="js/toast.js"></script>-->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA4BHZ8LA69tKUQfitbpltWoTS-GskbQO8" async defer></script>
+<script type="text/javascript">  
+
+    resizer();
+    app.initialize();
+
+function resizer(){
+    vW = $(window).width();
+    vH = $(window).height();
+
+
+    $("#bg_login").css('min-height', $(window).height());
+    $("#dvContentG").css('min-height', $(window).height()+5);
+
+    $("#float_btn").css({'margin-top':vH-110, 'margin-left': vW - 100});
+}  
+
+
+</script>
+
+</html>
