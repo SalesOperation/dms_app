@@ -83,7 +83,7 @@ var app = {
 $(document).ready(function(e){
 
     hide_pags();
-    $("#page").show();
+    $("#dvInicio").show();
     $('#lbl_title').html('DMS EXPERIENCE');            
     $("#dvHead").show();
     //map = plugin.google.maps.Map.getMap($("#dvMain")); 
@@ -211,7 +211,7 @@ function hide_pags(){
     $("#pag4").hide();
     $("#pag3").hide();
     $("#pag2").hide();
-    $("#pag1").hide();
+    $("#dvInicio").hide();
     $("#dvHead").hide();
     $('#dv_forms_template').hide();
 }
@@ -288,20 +288,20 @@ function switchMenu(vIdFrom, vIdTo){
             hide_pags();            
             $('#lbl_title').html('DMS EXPERIENCE');            
             $("#dvHead").show();
-            $("#pag1").show();
+            $("#dvInicio").show();
         break;
         case 1:            
             $("#pag4").hide();
             $("#pag3").hide();
             $("#pag2").show();
-            $("#pag1").hide();
+            $("#dvInicio").hide();
             reloadkpi();
         break;
         case 2:
             $("#pag4").show();
             $("#pag3").hide();
             $("#pag2").hide();
-            $("#pag1").hide();
+            $("#dvInicio").hide();
             reloadkpi();
             
         break;
@@ -764,7 +764,7 @@ function resize_img(){
 
 function desplegarForm(vIdForm){
     var vStrFrom = '';
-    var vItems = [{tipo:101, id:1001, name:'Pergunta de prueba 1', ops:[], func:''},
+    var vItems = [{tipo:111, id:1001, name:'Pergunta de prueba 1', ops:[], func:''},
                     {tipo:101, id:1002, name:'Pergunta de prueba 2', ops:[], func:''},
                     {tipo:101, id:1072, name:'Pergunta de prueba 4', ops:[], func:''},
                     {tipo:101, id:1022, name:'Pergunta de prueba 5', ops:[], func:''},
@@ -806,10 +806,13 @@ function drawObject(vTipo, vId, vNombre, vOptions, vfunc){
     switch(vTipo)
     {
         case 101:
-            vStr += '<label for="'+ vId +'">'+ vNombre +'</label><input type="text" id="'+ vId +'" />';
+            vStr += '<label for="'+ vId +'">'+ vNombre +'</label><input type="text" id="'+ vId +'" /><br />';
+        break;
+        case 111:
+            vStr += '<label for="'+ vId +'">'+ vNombre +'</label><input type="number" id="'+ vId +'" /><br />';
         break;
         case 102:
-            vStr += '<label for="'+ vId +'">'+ vNombre +'</label><textarea id="'+ vId +'"></textarea>';
+            vStr += '<label for="'+ vId +'">'+ vNombre +'</label><textarea id="'+ vId +'"></textarea><br />';
         break;
         case 103:
             vStr += '<label for="'+ vId +'">'+ vNombre +'</label>';
@@ -817,7 +820,7 @@ function drawObject(vTipo, vId, vNombre, vOptions, vfunc){
             for(i=0; i<vOptions.length; i++){
                 vStr += '<option value="'+ vOptions[i].id +'">'+ vOptions[i].name +'</option>';
             }
-            vStr += '</select>';
+            vStr += '</select><br />';
         break;
         case 104:
             vStr += '<fieldset data-role="controlgroup"><legend>'+ vNombre +'</legend>';
@@ -825,7 +828,7 @@ function drawObject(vTipo, vId, vNombre, vOptions, vfunc){
                 vStr += '<input type="radio" name="'+ vId + '" id="'+ vOptions[i].id +'" value="'+ vOptions[i].id +'">';
                 vStr += '<label for="'+ vOptions[i].id +'">'+ vOptions[i].name +'</label>';
             }
-            vStr += '</fieldset>';
+            vStr += '</fieldset><br />';
         break;
         case 105:
             vStr += '<fieldset data-role="controlgroup"><legend>'+ vNombre +'</legend>';
@@ -833,7 +836,7 @@ function drawObject(vTipo, vId, vNombre, vOptions, vfunc){
                 vStr += '<input type="checkbox" name="'+ vOptions[i].id + '" id="'+ vOptions[i].id +'">';
                 vStr += '<label for="'+ vOptions[i].id +'">'+ vOptions[i].name +'</label>';
             }
-            vStr += '</fieldset>';
+            vStr += '</fieldset><br />';
         break;
         case 201:
             vStr += '<br /><center><button id="'+ vId +'" onclick="'+ vfunc + '" data-theme="b" style="width:60%">'+ vNombre +'</button></center>';
