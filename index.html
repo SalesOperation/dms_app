@@ -52,24 +52,28 @@
                 <a href="#dvMenu" onclick="resize_img()"><img src="img/menu_icon.png" width="100%" /></a>
             </div>           
         
-            <div id="dvInicio">
+            <div id="dvDMS">
                 <div class="ui-grid-a">
                     <div class="ui-block-a" >
                         <div style="background:white; margin:5%; padding:5%; border-radius:5%; box-shadow:1px 1px 5px">                            
-                            <div style="position:absolute"><label id="alertM1" style="border-radius:50%; padding:2px; background:red; font-weight:bold; color:white">&nbsp1&nbsp</label></div>
+                            <div style="position:absolute"><label id="alertM1" style="border-radius:50%; padding:2px; background:blue; font-weight:bold; color:white">&nbsp1&nbsp</label></div>
                             <img src="img/form_icon2.png" width="100%"/>
                             <center><label>Formularios</label></center>
                         </div>
                     </div>
                     <div class="ui-block-b" >
                         <div style="background:white; margin:5%; padding:5%; border-radius:5%; box-shadow:1px 1px 5px">                            
-                            <div style="position:absolute"><label id="alertM1" style="border-radius:50%; padding:2px; background:red; font-weight:bold; color:white">&nbsp1&nbsp</label></div>
+                            <div style="position:absolute"><label id="alertM1" style="border-radius:50%; padding:2px; background:blue; font-weight:bold; color:white">&nbsp1&nbsp</label></div>
                             <img src="img/forms_sent.png" width="100%"/>
 
                             <center><label>Enviados</label></center>
                         </div>
                     </div>
                 </div>
+            </div><!-- Pagina 1 -->
+            <div id="dvHorus">
+                <div id="mapHorus" style="width:100%; height:150px; margin-bottom:15px"></div>
+                <button>Iniciar Recorrido</button>
             </div><!-- Pagina 1 -->
 
             <!-- Pagina DMS Forms -->
@@ -269,6 +273,11 @@
             </li>
             <li data-icon="false" style="background-color:#0B0B61; border:0; padding:0">
                 <div class="lbar"></div>
+                <button data-icon="ui-btn ui-btn-icon-left ui-icon-location" style="text-align:left; background-color:#0B0B61; border:0; margin:0; margin-left:5px;" onclick="switchMenu(0,2)">SO Horus</button>
+                <!--<a href="#" style="background-color: #0B0B61; border:0; border-top:solid thin #0A0A2A" onclick="switchMenu(1,1)"></a>-->
+            </li>
+            <li data-icon="false" style="background-color:#0B0B61; border:0; padding:0">
+                <div class="lbar"></div>
                 <button data-icon="ui-btn ui-btn-icon-left ui-icon-arrow-u-r" style="text-align:left; background-color:#0B0B61; border:0; margin:0; margin-left:5px;" onclick="switchMenu(0,3)">Formularios DMS</button>
                 <!--<a href="#" style="background-color: #0B0B61; border:0; border-top:solid thin #0A0A2A" onclick="switchMenu(1,1)"></a>-->
             </li>
@@ -303,13 +312,13 @@
 
 </body>
 
-<script type="text/javascript" src="cordova.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA4BHZ8LA69tKUQfitbpltWoTS-GskbQO8" async defer></script>
 <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
 <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
 <script type="text/javascript" src="js/js_main.js"></script>
 <script type="text/javascript" src="js/js_db.js"></script>
 <!--<script type="text/javascript" src="js/toast.js"></script>-->
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA4BHZ8LA69tKUQfitbpltWoTS-GskbQO8" async defer></script>
+<script type="text/javascript" src="cordova.js"></script>
 <script type="text/javascript">  
 
     resizer();
@@ -324,6 +333,7 @@ function resizer(){
     $("#dvContentG").css('min-height', $(window).height()-40);
 
     $("#float_btn").css({'margin-top':vH-110, 'margin-left': vW - 100});
+    $("#mapHorus").css('min-height', vW*0.6);
 }  
 
 

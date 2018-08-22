@@ -4,7 +4,7 @@ var userWS = '69BA4B9D76B7C3452E2A48B7BF9790FE';
 var pdwWS  = '0BAD6CE456FCFBEF59544697D43E06D1';
 var vFlagTracking = false;
 var vTimerGPS = 30000;
-var vIdFormuladio ='XO';
+var vIdFormulario ='XO';
 //var ws_url = 'http://localhost/ws_so/service_so.php'; 
 var ws_url = 'https://190.4.63.207/ws_so/service_so.php';
 
@@ -75,15 +75,15 @@ var app = {
        //     //window.plugins.toast.show('Back Bloq..', 1000, 'bottom');          
         });
         
-        getMap(14.618086,-86.959082);
+        
     }
 
 }
 
 $(document).ready(function(e){
-
+    setTimeout(function(){getMap(14.618086,-86.959082); }, 2000);
     hide_pags();
-    $("#dvInicio").show();
+    $("#dvDMS").show();
     $('#lbl_title').html('DMS EXPERIENCE');            
     $("#dvHead").show();
     //map = plugin.google.maps.Map.getMap($("#dvMain")); 
@@ -199,19 +199,19 @@ function get_froms(){
 }
 
 function showForm(vId){
-    alert('Form ID ' + vId);
+    console.log('Form ID ' + vId);
 }
 function hide_pags(){
 
     //$("#dvMain").hide();
     $("#dvtitle").html(vTitle); 
-
+    $("#dvHorus").hide();
     $("#dvIncRep").hide();
     $("#pagDMS_forms").hide();
     $("#pag4").hide();
     $("#pag3").hide();
     $("#pag2").hide();
-    $("#dvInicio").hide();
+    $("#dvDMS").hide();
     $("#dvHead").hide();
     $('#dv_forms_template').hide();
 }
@@ -288,21 +288,20 @@ function switchMenu(vIdFrom, vIdTo){
             hide_pags();            
             $('#lbl_title').html('DMS EXPERIENCE');            
             $("#dvHead").show();
-            $("#dvInicio").show();
+            $("#dvDMS").show();
         break;
         case 1:            
             $("#pag4").hide();
             $("#pag3").hide();
             $("#pag2").show();
-            $("#dvInicio").hide();
+            $("#dvDMS").hide();
             reloadkpi();
         break;
-        case 2:
-            $("#pag4").show();
-            $("#pag3").hide();
-            $("#pag2").hide();
-            $("#dvInicio").hide();
-            reloadkpi();
+        case 2:            
+            hide_pags();
+            $('#lbl_title').html('SO - Horus');            
+            $("#dvHead").show();
+            $("#dvHorus").show();
             
         break;
         case 3:
@@ -713,7 +712,7 @@ function getMap(latitude, longitude) {
     };
 
     map = new google.maps.Map
-    (document.getElementById("map_tracking"), mapOptions);
+    (document.getElementById("mapHorus"), mapOptions);
 
 
     var latLong = new google.maps.LatLng(latitude, longitude);
@@ -723,7 +722,7 @@ function getMap(latitude, longitude) {
     });
 
     marker.setMap(map);
-    map.setZoom(12);
+    map.setZoom(7);
     map.setCenter(marker.getPosition());
 }
 
