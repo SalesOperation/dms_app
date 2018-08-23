@@ -3,7 +3,7 @@
 var userWS = '69BA4B9D76B7C3452E2A48B7BF9790FE';
 var pdwWS  = '0BAD6CE456FCFBEF59544697D43E06D1';
 var vFlagTracking = false;
-var vTimerGPS = 30000;
+var vTimerGPS; // = 30000;
 var vIdFormulario ='XO';
 //var ws_url = 'http://localhost/ws_so/service_so.php'; 
 var ws_url = 'https://190.4.63.207/ws_so/service_so.php';
@@ -83,6 +83,7 @@ var app = {
 $(document).ready(function(e){
     setTimeout(function(){getMap(14.618086,-86.959082); }, 2000);
     hide_pags();
+
     $("#dvDMS").show();
     $('#lbl_title').html('DMS EXPERIENCE');            
     $("#dvHead").show();
@@ -167,6 +168,18 @@ $(document).ready(function(e){
         var file = $("#vFile").prop('files')[0];
         getBase64(file); // prints the base64 string
     });
+
+    setTimeout(function(){
+        db.transaction(function(cmd2){
+            cmd2.executeSql("SELECT * FROM params where id = 1", [], function (cmd2, results) {
+                var len = results.rows.length;
+                if(len>0){
+                    vTimerGPS = results.rows.item(0).dvalue;
+                }
+            });
+        });
+    }, 1000);
+
 });
 
 function get_forms(){
@@ -223,6 +236,10 @@ function hide_pags(){
     $("#dvDMS").hide();
     $("#dvHead").hide();
     $('#dv_forms_template').hide();
+
+    //Forms DMS    
+    $("#forms_enviados").hide();
+    $("#forms_pendientes").hide();
 }
 
 
@@ -866,7 +883,27 @@ function updateForms(){
         theme: 'a',
         html: ""
     });
+    
+    $("#forms_list").show();
+    $("#forms_enviados").hide();
+    $("#forms_pendientes").hide();
+
     setTimeout(function(){
         $.mobile.loading('hide');
-    }, 3000);
+    }, 1000);
+}
+
+
+function formsEnviados(){
+
+    $("#forms_list").hide();
+    $("#forms_pendientes").hide();
+    $("#forms_enviados").show();
+}
+
+function formsPendientes(){
+
+    $("#forms_list").hide();
+    $("#forms_pendientes").show();
+    $("#forms_enviados").hide();
 }
