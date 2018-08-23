@@ -1,12 +1,14 @@
 
 
-var db = openDatabase('dbTackSCS', '1.0', 'TrackSCS Data Base', 10 * 1024 * 1024);
+var db = openDatabase('db_dms_forms', '1.0', 'DB for DMS App Forms', 10 * 1024 * 1024);
 
 db.transaction(function(cmd){
     var vFlag = 0;
     cmd.executeSql('CREATE TABLE IF NOT EXISTS users (id unique, pwd, name, phone, status, login, type)');
-    cmd.executeSql('CREATE TABLE IF NOT EXISTS mrks_gps (fecha, lat, lng, user)');
-    cmd.executeSql('CREATE TABLE IF NOT EXISTS tbl_kpi (id_kpi, kpi, fecha, ejecutado, meta, promedio, udt_dt)');
+    cmd.executeSql('CREATE TABLE IF NOT EXISTS mrks_gps (fecha, lat, lng, user)');    
+    cmd.executeSql('CREATE TABLE IF NOT EXISTS tbl_forms (id, type, dtos, fech_created)');      
+    cmd.executeSql('CREATE TABLE IF NOT EXISTS tbl_forms_filled (id_form, dtos, date, status)');    
+    cmd.executeSql('CREATE TABLE IF NOT EXISTS tbl_trays(tray, id_form, fech, status)');
 
 
     db.transaction(function(cmd){   
@@ -17,7 +19,7 @@ db.transaction(function(cmd){
             vFlag = 1;
         }
         if(vFlag == 0){
-            cmd.executeSql('INSERT INTO users (id, pwd, name, phone, status,login,type) VALUES (?,?,?,?,?,?,?)', ['admin','Tigo.18', 'Administrador', '99999999', 1,'0','admin']); 
+            cmd.executeSql('INSERT INTO users (id, pwd, name, phone, status,login,type) VALUES (?,?,?,?,?,?,?)', ['admin','admin123', 'Administrador', '99999999', 1,'0','admin']); 
         }
         //cmd.executeSql('INSERT INTO kpi_data_zonas_hist (id,zona, cnl, sub_cnl, ejecutado,forecast,budget,fecha,year,month,unit) VALUES (?,?,?,?,?,?,?,?,?,?,?)', ['1101','0', '1', '1','152325','15262','15626','20170502','2017','5','UND']);
         });

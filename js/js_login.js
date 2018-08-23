@@ -97,7 +97,6 @@ function login(){
 		var pwd = String($("#pwd").val()).trim();
         var vQuery = '';
 
-
 		db.transaction(function(cmd){   
             cmd.executeSql("SELECT * FROM users where id=? and status='1'", [usr], function (cmd, results) {
                 var len = results.rows.length, i;
@@ -120,8 +119,14 @@ function login(){
                             url: ws_url,
                             dataType:'json',
                             data: {m:100, vx:userWS, vy:pdwWS, ui:usr, pw:pwd},
+                            beforsend: function(){
+                                $.mobile.loading('show');
+                            },
                             success: function(data){ 
                                 console.log(data);
+
+                                setTimeout(function(){$.mobile.loading('hide');}, 1000);
+                                
                                 if(data[0].flag == 'true'){
                                     console.log('Log OK');
                                     vQuery = 'INSERT INTO users (id, pwd, name, phone, status,login,type)';

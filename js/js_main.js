@@ -50,7 +50,7 @@ var app = {
         window.resolveLocalFileSystemURL(cordova.file.externalDataDirectory, 
             function (fs) {
                 fs.getDirectory('resources', { create: true }, function (fs2){
-                    console.log('Directorio - ' + fs2.name);
+                    //console.log('Directorio - ' + fs2.name);
                     /*fs2.getFile('log.txt', {create: true, exclusive: false}, 
                         function(fileEntry) {
                             alert('File creation successfull!');
@@ -87,6 +87,15 @@ $(document).ready(function(e){
     $('#lbl_title').html('DMS EXPERIENCE');            
     $("#dvHead").show();
     //map = plugin.google.maps.Map.getMap($("#dvMain")); 
+
+    if (vFlagTracking==false){
+        $("#startGPS").show();
+        $("#stopGPS").hide();
+    }else{
+        $("#startGPS").hide();
+        $("#stopGPS").show();        
+    }
+
 
     function validaLogin(){
         var tempLogin = getParams();
@@ -160,7 +169,7 @@ $(document).ready(function(e){
     });
 });
 
-function get_froms(){
+function get_forms(){
 
     //Formularios
     var json_forms = [{id:0, name:"DOFOM4"}, {id:10, name:"FORDIS05"}];
@@ -309,7 +318,7 @@ function switchMenu(vIdFrom, vIdTo){
             $("#pagDMS_forms").show();
             $('#lbl_title').html('DOCUMENTOS DMS');
             $("#dvHead").show();
-            get_froms();
+            get_forms();
         break;
         case 100:
             hide_pags();
@@ -489,17 +498,21 @@ function tracking(){
         cordova.plugins.backgroundMode.setEnabled(true); 
         clearInterval(vIntervalGeo);
         console.log('starting..');
-        $("#btn_tack").attr('src', 'img/tracking.png');
-        $("#lbl_tracking").html('Detener Tracking');
-        $("#msj").html('Recorido Iniciado');
+        $("#startGPS").hide();
+        $("#stopGPS").show();
+        //$("#btn_tack").attr('src', 'img/tracking.png');
+        //$("#lbl_tracking").html('Detener Tracking');
+        //$("#msj").html('Recorido Iniciado');
         vFlagTracking = true;
         getMapLocation();
         vIntervalGeo = setInterval(function(){ getMapLocation(); }, vTimerGPS);
 
     }else{
-        $("#btn_tack").attr('src', 'img/play.png');
-        $("#lbl_tracking").html('Iniciar Tracking');
-        $("#msj").html('Recorido Finalizado');
+        //$("#btn_tack").attr('src', 'img/play.png');
+        //$("#lbl_tracking").html('Iniciar Tracking');
+        //$("#msj").html('Recorido Finalizado');
+        $("#startGPS").show();
+        $("#stopGPS").hide();
         clearInterval(vIntervalGeo);
         vFlagTracking = false;
         cordova.plugins.backgroundMode.setEnabled(false); 
@@ -743,10 +756,10 @@ function getBase64(file) {
    var reader = new FileReader();
    reader.readAsDataURL(file);
    reader.onload = function () {
-     console.log(reader.result);
+     //console.log(reader.result);
    };
    reader.onerror = function (error) {
-     console.log('Error: ', error);
+     //console.log('Error: ', error);
    };
 }
 
@@ -844,3 +857,16 @@ function drawObject(vTipo, vId, vNombre, vOptions, vfunc){
     return vStr;
 }
 
+// Fumcion para obtener formularios del servidor
+function updateForms(){
+    console.log('UPDATING..');
+    $.mobile.loading( 'show', {
+        text: 'Cargando...',
+        textVisible: true,
+        theme: 'a',
+        html: ""
+    });
+    setTimeout(function(){
+        $.mobile.loading('hide');
+    }, 3000);
+}

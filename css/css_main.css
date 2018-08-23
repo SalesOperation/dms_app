@@ -279,6 +279,10 @@ d -000000*/
 	background-color: blue;
 }
 
+#sbMenuForms .btnH:hover{
+	background-color: #A9BCF5;
+}
+
 /* Show priority 1 at 320px (20em x 16px) */
 @media screen and (min-width: 20em) {
    .my-custom-class th.ui-table-priority-1,
