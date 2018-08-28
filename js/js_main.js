@@ -20,6 +20,7 @@ var vIntervalGeo;
 var vInteDash;
 var bgGeo;
 var vFormData = {};
+var vFormsPendientes = [];
 //var webSvrListener =  setInterval(function(){ consultSVR()}, 59000);
 var pagRoot = [{id:0, back:0},
                 {id:1, back:0},
@@ -975,10 +976,6 @@ function drawObject(vTipo, vId, vNombre, vOptions, vfunc){
 // Fumcion para obtener formularios del servidor
 function updateForms(){
 
-    $("#forms_list").show();
-    $("#forms_enviados").hide();
-    $("#forms_pendientes").hide();
-
     $.ajax({
         type: 'POST',
         data: {m:301,vx:userWS, vy:pdwWS, ui:vDatosUsuario.user},        
@@ -1014,6 +1011,14 @@ function updateForms(){
                 ejecutaSQL(vQry, 0); 
             }
         }, 
+        error: function(e){
+            $.mobile.loading( 'show', {
+                text: 'Servidor no responde.',
+                textVisible: true,
+                theme: 'a',
+                html: ""
+            });
+        },
         complete: function(e){
             //console.log(e);
             show_Forms();
@@ -1026,8 +1031,15 @@ function updateForms(){
 }
 
 
-function formsEnviados(){
+function formsList(){
+    show_Forms();
+    $("#forms_list").show();
+    $("#forms_enviados").hide();
+    $("#forms_pendientes").hide();
+}
 
+
+function formsEnviados(){
     db.transaction(function(cmd){   
         cmd.executeSql('SELECT * FROM tbl_forms_filled where status =?', [1], function (cmd, results) {
             var len = results.rows.length;
@@ -1041,7 +1053,7 @@ function formsEnviados(){
                 vStrHtml +=  '<td>'+ results.rows[i].id_form +'</td>';
                 vStrHtml +=  '<td>'+ vName[0] +'</td>';
                 vStrHtml +=  '<td>'+ results.rows[i].date.toString().substr(0,8) + ' '
-                //vStrHtml +=  results.rows[i].date.toString().substr(8,2) +':'+ results.rows[i].fech.toString().substr(10,2) + '</td>';
+                vStrHtml +=  results.rows[i].date.toString().substr(8,2) +':'+ results.rows[i].date.toString().substr(10,2) + '</td>';
                 vStrHtml +=  '</tr>';
             }   
             vStrHtml +=  '</tbody>';
@@ -1057,21 +1069,22 @@ function formsEnviados(){
 }
 
 function formsPendientes(){
-
+    vFormsPendientes = [];
     db.transaction(function(cmd){   
-        cmd.executeSql('SELECT * FROM tbl_trays where tray =?', [1], function (cmd, results) {
+        cmd.executeSql('SELECT * FROM tbl_forms_filled where status =?', [0], function (cmd, results) {
             var len = results.rows.length;
             vStrHtml = '';
             vStrHtml += '<table data-role="table" data-mode="columntoggle" class="table-stripe">';
             vStrHtml +=  '<thead><tr><th data-priority="1">ID</th><th data-priority="0">Formulario</th><th>fecha</th></tr></thead>';
             vStrHtml +=  '<tbody>';
             for(i=0; i<len; i++){
+                vFormsPendientes.push({id_form:results.rows[i].id_form, vdata:results.rows[i].dtos, fech:results.rows[i].date});
                 vName = results.rows[i].id_form.split('_')
                 vStrHtml +=  '<tr>';
                 vStrHtml +=  '<td>'+ results.rows[i].id_form +'</td>';
                 vStrHtml +=  '<td>'+ vName[0] +'</td>';
-                vStrHtml +=  '<td>'+ results.rows[i].fech.toString().substr(0,8) + ' '
-                vStrHtml +=  results.rows[i].fech.toString().substr(8,2) +':'+ results.rows[i].fech.toString().substr(10,2) + '</td>';
+                vStrHtml +=  '<td>'+ results.rows[i].date.toString().substr(0,8) + ' '
+                vStrHtml +=  results.rows[i].date.toString().substr(8,2) +':'+ results.rows[i].date.toString().substr(10,2) + '</td>';
                 vStrHtml +=  '</tr>';
             }   
             vStrHtml +=  '</tbody>';
@@ -1090,28 +1103,124 @@ function formsPendientes(){
 }
 
 function envioFormsPend(){
-    console.log('Enviando...');
-    vIdForm= 'FORDIS04_20180828115608';
-    vQuery = 'UPDATE tbl_forms_filled SET status=1 where id_form=\'' + vIdForm + '\'';
-    ejecutaSQL(vQuery, 0);
-    vQuery = 'DELETE FROM tbl_trays where id_form=\'' + vIdForm + '\'';
-    ejecutaSQL(vQuery, 0);
+    var contForms = 0;
+    var contRegs = 0;
+    //console.log(vFormsPendientes);
+    for(i=0; i<vFormsPendientes.length; i++){
+        //console.log(vFormsPendientes); 
+        $.ajax({
+            url:ws_url,
+            type:'POST',
+            data:{m:302,vx:userWS, vy:pdwWS, ui:vDatosUsuario.user, forms:vFormsPendientes[i]},        
+            dataType:'text',
+            success: function(data){
+                //console.log(i);
+                var vflag = data.split('/');
+                if(vflag[0] == 'SUCCESS'){
+                    vQuery = 'UPDATE tbl_forms_filled SET status=1 where id_form=\'' + vflag[1] + '\'';
+                    ejecutaSQL(vQuery, 0);                        
+                    contForms ++;
+                }            
+            }, 
+            error: function(error){
+                $.mobile.loading( 'show', {
+                    text: '',
+                    textVisible: true,
+                    textonly:true,
+                    theme: 'a',
+                    html: '<span><center><img src="img/noconection.png" width="60px" /></center><br />Servidor no responde.</span>'
+                });
+                setTimeout(function(){  $.mobile.loading('hide'); }, 2000);
+            },
+            complete: function(e){
+                //console.log(e.responseText);
+                contRegs++;                
+                if(contRegs==vFormsPendientes.length){
+                    $.mobile.loading( 'show', {
+                        text: ' [' + contForms + '] Enviados Correctamente',
+                        textVisible: true,
+                        textonly:true,
+                        theme: 'a',
+                        html: ''
+                    });
+                    formsPendientes();
+                    setTimeout(function(){  $.mobile.loading('hide'); }, 2000);
+                }
+            }
+        });        
+    }
+    
+
+    
 }
 
 function envioForm(){
-    var tempForm = {id:'', vdata:[], fech:''};
-    tempForm.id = vFormData.id_form;
+    var tempForm = [];
+    var temArr = [];
+    tempForm.push({id_form:'', vdata:[], fech:''});
+    tempForm[0].id_form = vFormData.id_form;
+
     for(i=0; i<vFormData.vdata.length; i++){
         //console.log(vFormData.vdata[i].id);
         x1 = document.getElementById(vFormData.vdata[i].id).value;
-        tempForm.vdata.push({q:vFormData.vdata[i].name, r:x1});
+        temArr.push({q:vFormData.vdata[i].name, r:x1});
     }
-    tempForm.fech = getYMD(0) + getHMS();
-    vQuery = 'INSERT INTO tbl_forms_filled (id_form, dtos, date, status) ';
-    vQuery += 'VALUES(\'' +  tempForm.id + '\',\'' + JSON.stringify(tempForm.vdata) + '\',' + tempForm.fech + ',0)';
-    ejecutaSQL(vQuery, 0);
+    tempForm[0].vdata = JSON.stringify(temArr);
+    tempForm[0].fech = getYMD(0) + getHMS();
 
-    vQuery = 'INSERT INTO tbl_trays (tray, id_form, fech, status) ';
-    vQuery += 'VALUES(1,\'' + tempForm.id  + '\',' + tempForm.fech + ',0)';
-    ejecutaSQL(vQuery, 0);
+    console.log(tempForm);
+    $.ajax({
+            url:ws_url,
+            type:'POST',
+            data:{m:302,vx:userWS, vy:pdwWS, ui:vDatosUsuario.user, forms:tempForm[0]},        
+            dataType:'text',
+            success: function(data){
+                //console.log(data);
+                var vflag = data.split('/');
+                if(vflag[0] == 'SUCCESS'){
+                    vQuery = 'INSERT INTO tbl_forms_filled (id_form, dtos, date, status) ';
+                    vQuery += 'VALUES(\'' +  tempForm[0].id_form + '\',\'' + JSON.stringify(tempForm[0].vdata) + '\',' + tempForm[0].fech + ',1)';
+                    ejecutaSQL(vQuery, 0);        
+
+                    $.mobile.loading( 'show', {
+                        text: 'Formulario enviado correctamente.',
+                        textVisible: true,
+                        textonly:true,
+                        theme: 'a',
+                        html: ''
+                    });
+                    setTimeout(function(){  $.mobile.loading('hide'); backButton(); }, 1200);
+                }else{
+                    $.mobile.loading( 'show', {
+                        text: 'Error al intentar salvar formulario.',
+                        textVisible: true,
+                        textonly:true,
+                        theme: 'a',
+                        html: ''
+                    });
+                    setTimeout(function(){  $.mobile.loading('hide'); backButton(); }, 1200);
+                }
+                
+
+            }, 
+            error: function(error){
+                $.mobile.loading( 'show', {
+                    text: '',
+                    textVisible: true,
+                    textonly:true,
+                    theme: 'a',
+                    html: '<span><center><img src="img/noconection.png" width="60px" /></center><br />Servidor no responde.<br />Guardando Localmente</span>'
+                });
+                vQuery = 'INSERT INTO tbl_forms_filled (id_form, dtos, date, status) ';
+                vQuery += 'VALUES(\'' +  tempForm[0].id_form + '\',\'' + JSON.stringify(tempForm[0].vdata) + '\',' + tempForm[0].fech + ',0)';
+                ejecutaSQL(vQuery, 0);
+
+                setTimeout(function(){  
+                    $.mobile.loading('hide'); 
+                    backButton();
+                }, 2000);
+            }
+        });      
+
+    
 }

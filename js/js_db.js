@@ -9,7 +9,7 @@ db.transaction(function(cmd){
     cmd.executeSql('CREATE TABLE IF NOT EXISTS mrks_gps (fecha, lat, lng, user)');    
     cmd.executeSql('CREATE TABLE IF NOT EXISTS tbl_forms (id unique, desc, type, version, dtos, udt_dt)');      
     cmd.executeSql('CREATE TABLE IF NOT EXISTS tbl_forms_filled (id_form, dtos, date, status)');    
-    cmd.executeSql('CREATE TABLE IF NOT EXISTS tbl_trays (tray, id_form, fech, status)');     
+    //cmd.executeSql('CREATE TABLE IF NOT EXISTS tbl_trays (tray, id_form, fech, status)');     
     //cmd.executeSql('CREATE TABLE IF NOT EXISTS tbl_dms (id_pdv, nombre_pdv, id_circuito)');
 
 
