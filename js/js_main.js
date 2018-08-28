@@ -5,20 +5,27 @@ var pdwWS  = '0BAD6CE456FCFBEF59544697D43E06D1';
 var vFlagTracking = false;
 var vTimerGPS; // = 30000;
 var vIdFormulario ='XO';
-//var ws_url = 'http://localhost/ws_so/service_so.php'; 
-var ws_url = 'https://190.4.63.207/ws_so/service_so.php';
+var ws_url = 'http://localhost/ws_so/service_so.php'; 
+//var ws_url = 'https://190.4.63.207/ws_so/service_so.php';
 
 var vDatosUsuario ={"user":"", "login":""};
 var vTitle ="Tracking Service Comercial Support";
 var map;
+var pgActual = 0;
+var pgBack = 0;
 
 
 var vIntersept = true;
 var vIntervalGeo;
 var vInteDash;
 var bgGeo;
+var vFormData = {};
 //var webSvrListener =  setInterval(function(){ consultSVR()}, 59000);
-
+var pagRoot = [{id:0, back:0},
+                {id:1, back:0},
+                {id:2, back:0},
+                {id:3, back:0},
+                {id:100, back:3}];
 var app = {
     
     //alert(getParams('user'));
@@ -182,47 +189,62 @@ $(document).ready(function(e){
 
 });
 
-function get_forms(){
+function show_Forms(){
 
     //Formularios
-    var json_forms = [{id:0, name:"DOFOM4"}, {id:10, name:"FORDIS05"}];
-    var vStr = '';
-    vStr = '<table id="tbl1" border="0" cellspacing="0" width="100%" class="tbl_boc">';
-    vStr += '<thead><tr><th></th><th></th></tr></thead>';
-    vStr += '<tbody>';
-    for (i=0; i< json_forms.length; i++){        
-        vStr += '<tr>';
-        vStr += '<td width="90%"><a href="#" onclick="desplegarForm('+ json_forms[i].id +')">'+ json_forms[i].name + '</a></td>';
-        vStr += '<td><img src="img/form_icon.png" width="30px" /></td>';
-        vStr += '</tr>';
-    }
-    vStr += '</tbody>';
-    vStr += '</table>';
+    var json_forms = [];
+    db.transaction(function(cmd2){
+        cmd2.executeSql("SELECT * FROM tbl_forms", [], function (cmd2, results) {
+            var len = results.rows.length;
+            if(len>0){
+                for(j=0;j<len; j++){
+                    json_forms.push({id:results.rows.item(j).id, tipo:results.rows.item(j).type, desc:results.rows.item(j).desc});
+                }
+            }
+            var vStr = '';
+            vStr = '<table id="tbl1" border="0" cellspacing="0" width="100%" class="tbl_boc">';
+            vStr += '<thead><tr><th></th><th></th></tr></thead>';
+            vStr += '<tbody>';
+            for (i=0; i< json_forms.length; i++){ 
+                if(json_forms[i].tipo == 1){            
+                    vStr += '<tr>';
+                    vStr += '<td width="90%"><a href="#" onclick="desplegarForm(\''+ json_forms[i].id +'\')">'+ json_forms[i].desc + '</a></td>';
+                    vStr += '<td><img src="img/form_icon.png" width="30px" /></td>';
+                    vStr += '</tr>';
+                }       
+            }
+            vStr += '</tbody>';
+            vStr += '</table>';
 
-    $('#tbl_forms').html(vStr);
+            $('#tbl_forms').html(vStr);
 
-    // ENCUESTAS
-    var json_encs = [{id:1002, name:"MAPA POP"}, {id:1001, name:"OTROS"}];
-    var vStr = '';
-    vStr = '<table id="tbl1" border="0" cellspacing="0" width="100%" class="tbl_boc">';
-    vStr += '<thead><tr><th></th><th></th></tr></thead>';
-    vStr += '<tbody>';
-    for (i=0; i< json_encs.length; i++){        
-        vStr += '<tr>';
-        vStr += '<td width="90%"><a href="#" onclick="desplegarForm('+ json_encs[i].id +')">'+ json_encs[i].name + '</a></td>';
-        vStr += '<td><img src="img/survey_icon.png" width="30px" /></td>';
-        vStr += '</tr>';
-    }
-    vStr += '</tbody>';
-    vStr += '</table>';
+            // ENCUESTAS
+            var vStr = '';
+            vStr = '<table id="tbl1" border="0" cellspacing="0" width="100%" class="tbl_boc">';
+            vStr += '<thead><tr><th></th><th></th></tr></thead>';
+            vStr += '<tbody>';
+            for (i=0; i< json_forms.length; i++){    
+                if(json_forms[i].tipo == 2){       
+                    vStr += '<tr>';
+                    vStr += '<td width="90%"><a href="#" onclick="desplegarForm(\''+ json_forms[i].id +'\')">'+ json_forms[i].desc + '</a></td>';
+                    vStr += '<td><img src="img/survey_icon.png" width="30px" /></td>';
+                    vStr += '</tr>';
+                }
+            }
+            vStr += '</tbody>';
+            vStr += '</table>';
 
-    $('#tbl_encs').html(vStr);
+            $('#tbl_encs').html(vStr);
+
+        });
+    });
+
+    
+
+    
 
 }
 
-function showForm(vId){
-    console.log('Form ID ' + vId);
-}
 function hide_pags(){
 
     //$("#dvMain").hide();
@@ -307,7 +329,23 @@ function displayImage(imgUri) {
     $("#imgUser").attr('src', imgUri);
 }
 
+
+function backButton(){
+
+    if(parseInt(pgActual) != 0){        
+        for(i=0; i<pagRoot.length; i++){
+            if(parseInt(pagRoot[i].id) == parseInt(pgActual)){
+                //console.log(pgActual);
+                switchMenu(pagRoot[i].id, pagRoot[i].back);
+            }
+        }
+    } 
+}
 function switchMenu(vIdFrom, vIdTo){
+    pgActual = vIdTo;
+    pgBack = vIdFrom;
+    //console.log('A-' + pgActual + '/B-' + pgBack);
+
     switch(vIdTo)
     {
         case 0:
@@ -333,9 +371,13 @@ function switchMenu(vIdFrom, vIdTo){
         case 3:
             hide_pags();
             $("#pagDMS_forms").show();
+            $("#forms_list").show();
+            $("#forms_enviados").hide();
+            $("#forms_pendientes").hide();
+
             $('#lbl_title').html('DOCUMENTOS DMS');
             $("#dvHead").show();
-            get_forms();
+            show_Forms();
         break;
         case 100:
             hide_pags();
@@ -701,6 +743,34 @@ function getYMD(vDays){
     return strDate;
 }
 
+function getHMS(){
+    var vToday = new Date();
+    var time = vToday.getTime();
+    //var milsecs = parseInt(vDays*24*60*60*1000);
+    vToday.setTime(time);
+    var strDate = '';
+
+    if(parseInt(vToday.getHours()) < 10 ){
+        strDate += '0' + (vToday.getHours());
+    }else{
+        strDate += '' + (vToday.getHours());
+    }
+    if(parseInt(vToday.getMinutes()) < 10 ){
+        strDate += '0' + vToday.getMinutes();
+    }else{
+        strDate += '' + vToday.getMinutes();
+    }
+    if(parseInt(vToday.getSeconds()) < 10 ){
+        strDate += '0' + vToday.getSeconds();
+    }else{
+        strDate += '' + vToday.getSeconds();
+    }
+
+    return strDate;
+}
+
+
+
 function getMonthName(vMonth){
     var ArrNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul','Ago','Sep','Oct', 'Nov', 'Dic'];
     return ArrNames[parseInt(vMonth)-1];
@@ -783,7 +853,7 @@ function getBase64(file) {
 
 function resize_img(){
 
-     setTimeout(function(){ 
+    setTimeout(function(){ 
         wuser = $("#imgUser").width(); 
         //console.log('Resizin img - ' + wuser);
         $("#imgUser").css('height', 
@@ -791,43 +861,71 @@ function resize_img(){
     200);
 }
 
-function desplegarForm(vIdForm){
+function desplegarForm(vIdForm, callback){
     var vStrFrom = '';
-    var vItems = [{tipo:111, id:1001, name:'Pergunta de prueba 1', ops:[], func:''},
-                    {tipo:101, id:1002, name:'Pergunta de prueba 2', ops:[], func:''},
-                    {tipo:101, id:1072, name:'Pergunta de prueba 4', ops:[], func:''},
-                    {tipo:101, id:1022, name:'Pergunta de prueba 5', ops:[], func:''},
-                    {tipo:101, id:1032, name:'Pergunta de prueba 6', ops:[], func:''},
-                    {tipo:101, id:1042, name:'Pergunta de prueba 7', ops:[], func:''},
-                    {tipo:101, id:1052, name:'Pergunta de prueba 8', ops:[], func:''},
-                    {tipo:101, id:1062, name:'Pergunta de prueba 9', ops:[], func:''},
+    var vItems;
+    var vFlag = 0;
 
-                    {tipo:103, id:1004, name:'Pergunta de prueba 4', ops:[{id:1010, name:'Op1'},{id:1012, name:'Op2'},{id:1013, name:'Op3'}], func:''},
-                    {tipo:101, id:1003, name:'Pergunta de prueba 3', ops:[], func:''},
-                    {tipo:104, id:1004, name:'Pergunta de prueba 4', ops:[{id:1010, name:'Op1'},{id:1012, name:'Op2'},{id:1013, name:'Op3'}], func:''},                    
-                    {tipo:105, id:1005, name:'Pergunta de prueba 5', ops:[{id:1110, name:'Op12'},{id:1112, name:'Op22'},{id:1113, name:'Op32'}], func:''}];
+    //console.log(vIdForm);
+    db.transaction(function(cmd){   
+        cmd.executeSql('SELECT * FROM tbl_forms where id =?', [vIdForm], function (cmd, results) {
+            var len = results.rows.length;
 
-    vStrFrom += '<div class="custom-corners"><div class="ui-bar ui-bar-a"><h3>Title </h3></div>';
+            for(i=0; i<len; i++){
+               vItems = JSON.parse(results.rows.item(i).dtos);
+               //console.log(vItems);
+               drawForm(vItems, vIdForm);
+               vFormData = {id_form:vIdForm + '_' + getYMD(0) + getHMS(), vdata:vItems};
+               //console.log(vFormData);
+            }   
+        });
+    });
+
+
+    /*[{tipo:111, id:1001, name:'Pergunta de prueba 1', ops:[], func:''},
+    {tipo:101, id:1002, name:'Pergunta de prueba 2', ops:[], func:''},
+    {tipo:101, id:1072, name:'Pergunta de prueba 4', ops:[], func:''},
+    {tipo:101, id:1022, name:'Pergunta de prueba 5', ops:[], func:''},
+    {tipo:101, id:1032, name:'Pergunta de prueba 6', ops:[], func:''},
+    {tipo:101, id:1042, name:'Pergunta de prueba 7', ops:[], func:''},
+    {tipo:101, id:1052, name:'Pergunta de prueba 8', ops:[], func:''},
+    {tipo:101, id:1062, name:'Pergunta de prueba 9', ops:[], func:''},
+
+    {tipo:103, id:1004, name:'Pergunta de prueba 4', ops:['Op1','Op2','Op3'], func:''},
+    {tipo:101, id:1003, name:'Pergunta de prueba 3', ops:[], func:''},
+    {tipo:104, id:1004, name:'Pergunta de prueba 4', ops:[{id:1010, name:'Op1'},{id:1012, name:'Op2'},{id:1013, name:'Op3'}], func:''},                    
+    {tipo:105, id:1005, name:'Pergunta de prueba 5', ops:[{id:1110, name:'Op12'},{id:1112, name:'Op22'},{id:1113, name:'Op32'}], func:''}];*/
+
+    
+
+}
+
+function drawForm(vItems, vtittle){
+    //console.log(vItems);
+    vStrFrom = '';
+    vStrFrom += '<div class="custom-corners"><div class="ui-bar ui-bar-a"><h3>'+ vtittle +'</h3></div>';
     vStrFrom += '<div class="ui-body ui-body-a">';
     var temp = [];
     for (j=0; j<vItems.length; j++){
-        temp.push(drawObject(vItems[j].tipo, vItems[j].id, vItems[j].name, vItems[j].ops, vItems[j].func));
+        //console.log(vStrFrom);
+        temp.push(drawObject(parseInt(vItems[j].tipo), vItems[j].id, vItems[j].name, eval(vItems[j].ops), vItems[j].func));
         vStrFrom += temp[j];
     }
     
-    vStrFrom +=  drawObject(201, 'btn1', 'Enviar', [], 'show()');
-    vStrFrom += '<script type="text/javascript">';
+    vStrFrom +=  drawObject(201, 'btn1', 'Enviar', [], 'envioForm()');
+    /*vStrFrom += '<script type="text/javascript">';
     vStrFrom += 'function show(){ alert(\'hello \' + $("#txt1").val() + \'-\'+ $("#txt8").val());  } ';
     vStrFrom += 'function chngOp1(){ if($("#op1").val()=="1001"){ $("#txt8").parent().hide(); $(\'label[for="txt8"]\').hide();}else{ $("#txt8").parent().show(); $(\'label[for="txt8"]\').show(); } }'; 
-    vStrFrom += '</script>';
+    vStrFrom += '</script>';*/
     vStrFrom += "</div></div>";
-
-    switchMenu(0, 100);
+    
+    switchMenu(3, 100);
 
     $('#dv_forms_template_content').html(vStrFrom);
     $('#dv_forms_template_content').trigger('create');
-
 }
+
+
 
 function drawObject(vTipo, vId, vNombre, vOptions, vfunc){
     var vStr = '';
@@ -847,7 +945,7 @@ function drawObject(vTipo, vId, vNombre, vOptions, vfunc){
             vStr += '<label for="'+ vId +'">'+ vNombre +'</label>';
             vStr += '<select id="'+ vId +'" onchange="'+ vfunc +'">';
             for(i=0; i<vOptions.length; i++){
-                vStr += '<option value="'+ vOptions[i].id +'">'+ vOptions[i].name +'</option>';
+                vStr += '<option value="'+ vOptions[i]+'">'+ vOptions[i] +'</option>';
             }
             vStr += '</select><br />';
         break;
@@ -876,26 +974,83 @@ function drawObject(vTipo, vId, vNombre, vOptions, vfunc){
 
 // Fumcion para obtener formularios del servidor
 function updateForms(){
-    console.log('UPDATING..');
-    $.mobile.loading( 'show', {
-        text: 'Cargando...',
-        textVisible: true,
-        theme: 'a',
-        html: ""
-    });
-    
+
     $("#forms_list").show();
     $("#forms_enviados").hide();
     $("#forms_pendientes").hide();
 
-    setTimeout(function(){
-        $.mobile.loading('hide');
-    }, 1000);
+    $.ajax({
+        type: 'POST',
+        data: {m:301,vx:userWS, vy:pdwWS, ui:vDatosUsuario.user},        
+        dataType:'json',
+        url: ws_url,
+        beforeSend: function(){
+            $.mobile.loading( 'show', {
+                text: 'Cargando...',
+                textVisible: true,
+                theme: 'a',
+                html: ""
+            });
+        },
+        success: function(data){
+            //console.log(data);
+            //console.log(JSON.stringify(data[1].data));
+            vQry = '';
+
+            // Borra Forms a actualizar
+            for(i=0;i<data.length; i++){
+
+                vQry = 'DELETE FROM tbl_forms';
+                vQry += ' WHERE id = \'' + data[i].id + '\'';
+
+                ejecutaSQL(vQry, 0); 
+            }
+
+            for(i=0;i<data.length; i++){
+
+                vQry = 'INSERT INTO tbl_forms (id, desc, type, version, dtos, udt_dt) VALUES(';
+                vQry += '\'' + data[i].id + '\',\'' + data[i].desc + '\','  + data[i].tipo + ',' + data[i].ver + ',\'' + JSON.stringify(data[i].data) +'\',\'' + data[i].udt_dt + '\')';
+
+                ejecutaSQL(vQry, 0); 
+            }
+        }, 
+        complete: function(e){
+            //console.log(e);
+            show_Forms();
+            setTimeout(function(){
+                $.mobile.loading('hide');
+            }, 1000);
+        }
+    });
+
 }
 
 
 function formsEnviados(){
 
+    db.transaction(function(cmd){   
+        cmd.executeSql('SELECT * FROM tbl_forms_filled where status =?', [1], function (cmd, results) {
+            var len = results.rows.length;
+            vStrHtml = '';
+            vStrHtml += '<table data-role="table" data-mode="columntoggle" class="table-stripe">';
+            vStrHtml +=  '<thead><tr><th data-priority="1">ID</th><th data-priority="0">Formulario</th><th>fecha</th></tr></thead>';
+            vStrHtml +=  '<tbody>';
+            for(i=0; i<len; i++){
+                vName = results.rows[i].id_form.split('_')
+                vStrHtml +=  '<tr>';
+                vStrHtml +=  '<td>'+ results.rows[i].id_form +'</td>';
+                vStrHtml +=  '<td>'+ vName[0] +'</td>';
+                vStrHtml +=  '<td>'+ results.rows[i].date.toString().substr(0,8) + ' '
+                //vStrHtml +=  results.rows[i].date.toString().substr(8,2) +':'+ results.rows[i].fech.toString().substr(10,2) + '</td>';
+                vStrHtml +=  '</tr>';
+            }   
+            vStrHtml +=  '</tbody>';
+            vStrHtml +=  '</table>';
+            //console.log(vStrHtml);
+            $("#tbl_forms_enviados").html(vStrHtml);
+            $("#tbl_forms_enviados").trigger('create');
+        });
+    });
     $("#forms_list").hide();
     $("#forms_pendientes").hide();
     $("#forms_enviados").show();
@@ -903,7 +1058,60 @@ function formsEnviados(){
 
 function formsPendientes(){
 
+    db.transaction(function(cmd){   
+        cmd.executeSql('SELECT * FROM tbl_trays where tray =?', [1], function (cmd, results) {
+            var len = results.rows.length;
+            vStrHtml = '';
+            vStrHtml += '<table data-role="table" data-mode="columntoggle" class="table-stripe">';
+            vStrHtml +=  '<thead><tr><th data-priority="1">ID</th><th data-priority="0">Formulario</th><th>fecha</th></tr></thead>';
+            vStrHtml +=  '<tbody>';
+            for(i=0; i<len; i++){
+                vName = results.rows[i].id_form.split('_')
+                vStrHtml +=  '<tr>';
+                vStrHtml +=  '<td>'+ results.rows[i].id_form +'</td>';
+                vStrHtml +=  '<td>'+ vName[0] +'</td>';
+                vStrHtml +=  '<td>'+ results.rows[i].fech.toString().substr(0,8) + ' '
+                vStrHtml +=  results.rows[i].fech.toString().substr(8,2) +':'+ results.rows[i].fech.toString().substr(10,2) + '</td>';
+                vStrHtml +=  '</tr>';
+            }   
+            vStrHtml +=  '</tbody>';
+            vStrHtml +=  '</table>';
+            //console.log(vStrHtml);
+            $("#tbl_forms_pendientes").html(vStrHtml);
+            $("#tbl_forms_pendientes").trigger('create');
+        });
+    });
+    
     $("#forms_list").hide();
     $("#forms_pendientes").show();
     $("#forms_enviados").hide();
+
+
+}
+
+function envioFormsPend(){
+    console.log('Enviando...');
+    vIdForm= 'FORDIS04_20180828115608';
+    vQuery = 'UPDATE tbl_forms_filled SET status=1 where id_form=\'' + vIdForm + '\'';
+    ejecutaSQL(vQuery, 0);
+    vQuery = 'DELETE FROM tbl_trays where id_form=\'' + vIdForm + '\'';
+    ejecutaSQL(vQuery, 0);
+}
+
+function envioForm(){
+    var tempForm = {id:'', vdata:[], fech:''};
+    tempForm.id = vFormData.id_form;
+    for(i=0; i<vFormData.vdata.length; i++){
+        //console.log(vFormData.vdata[i].id);
+        x1 = document.getElementById(vFormData.vdata[i].id).value;
+        tempForm.vdata.push({q:vFormData.vdata[i].name, r:x1});
+    }
+    tempForm.fech = getYMD(0) + getHMS();
+    vQuery = 'INSERT INTO tbl_forms_filled (id_form, dtos, date, status) ';
+    vQuery += 'VALUES(\'' +  tempForm.id + '\',\'' + JSON.stringify(tempForm.vdata) + '\',' + tempForm.fech + ',0)';
+    ejecutaSQL(vQuery, 0);
+
+    vQuery = 'INSERT INTO tbl_trays (tray, id_form, fech, status) ';
+    vQuery += 'VALUES(1,\'' + tempForm.id  + '\',' + tempForm.fech + ',0)';
+    ejecutaSQL(vQuery, 0);
 }

@@ -7,22 +7,23 @@ db.transaction(function(cmd){
     cmd.executeSql('CREATE TABLE IF NOT EXISTS users (id unique, pwd, name, phone, status, login, type)');
     cmd.executeSql('CREATE TABLE IF NOT EXISTS params (id unique, dvalue)');
     cmd.executeSql('CREATE TABLE IF NOT EXISTS mrks_gps (fecha, lat, lng, user)');    
-    cmd.executeSql('CREATE TABLE IF NOT EXISTS tbl_forms (id, type, dtos, fech_created)');      
+    cmd.executeSql('CREATE TABLE IF NOT EXISTS tbl_forms (id unique, desc, type, version, dtos, udt_dt)');      
     cmd.executeSql('CREATE TABLE IF NOT EXISTS tbl_forms_filled (id_form, dtos, date, status)');    
-    cmd.executeSql('CREATE TABLE IF NOT EXISTS tbl_trays(tray, id_form, fech, status)');
+    cmd.executeSql('CREATE TABLE IF NOT EXISTS tbl_trays (tray, id_form, fech, status)');     
+    //cmd.executeSql('CREATE TABLE IF NOT EXISTS tbl_dms (id_pdv, nombre_pdv, id_circuito)');
 
 
     db.transaction(function(cmd){   
         cmd.executeSql('SELECT * FROM users where id =?', ['admin'], function (cmd, results) {
-        var len = results.rows.length, i;
-        for (i = 0; i < len; i++) {
-            //alert(results.rows.item(i).id);
-            vFlag = 1;
-        }
-        if(vFlag == 0){
-            cmd.executeSql('INSERT INTO users (id, pwd, name, phone, status,login,type) VALUES (?,?,?,?,?,?,?)', ['admin','admin123', 'Administrador', '99999999', 1,'0','admin']); 
-            cmd.executeSql('INSERT INTO params (id, dvalue) VALUES (?,?)', [1,30000]); 
-        }
+            var len = results.rows.length, i;
+            for (i = 0; i < len; i++) {
+                //alert(results.rows.item(i).id);
+                vFlag = 1;
+            }
+            if(vFlag == 0){
+                cmd.executeSql('INSERT INTO users (id, pwd, name, phone, status,login,type) VALUES (?,?,?,?,?,?,?)', ['admin','admin123', 'Administrador', '99999999', 1,'0','admin']); 
+                cmd.executeSql('INSERT INTO params (id, dvalue) VALUES (?,?)', [1,30000]); 
+            }
         //cmd.executeSql('INSERT INTO kpi_data_zonas_hist (id,zona, cnl, sub_cnl, ejecutado,forecast,budget,fecha,year,month,unit) VALUES (?,?,?,?,?,?,?,?,?,?,?)', ['1101','0', '1', '1','152325','15262','15626','20170502','2017','5','UND']);
         });
     });
@@ -31,7 +32,7 @@ db.transaction(function(cmd){
 
 function ejecutaSQL(vQuery, vFlag){
     db.transaction(function(cmd){              
-            console.log(vQuery);
+            //console.log(vQuery);
             cmd.executeSql(vQuery, [], function(){ 
 
             },function(e){

@@ -38,6 +38,8 @@
 <div data-role="page" data-theme="a" id="page"  hidden>
 
     <div data-role="header" id="dvHead" data-position="fixed" style="position:fixed; border:none; padding-left:7px; padding-top:15px; background-color:#0B0B61; color:#FFF; height:35px">
+        
+        <div style="float:right; margin-right:20px; margin-top:-5px; cursor:pointer" onclick="backButton()"><img src="img/backicon.png" width="20px"/></div>
         <label id="lbl_title">DOCUMENTOS DMS</label>
         <!--<div class="ui-grid-a" id="subHead">
             <a href="#dvMenu" id="btnM" class="ui-btn ui-icon-bars ui-btn-icon-notext ui-nodisc-icon" style="border:none; margin-right:6px; margin-left:6px; display:none"></a>
@@ -110,7 +112,7 @@
                     <div class="ui-bar ui-bar-a">
                         <h3> Filtros </h3>
                     </div>
-                    <div id="tbl_forms_enviados"class="ui-body ui-body-a">
+                    <div id="tbl_forms_enviados_filt"class="ui-body ui-body-a">
                         Fecha Inicio
                         <input type="date" id="fechIniForm"/>
                         Fecha Fin
@@ -124,56 +126,16 @@
                         <h3> Formularios Enviados </h3>
                     </div>
                     <div id="tbl_forms_enviados"class="ui-body ui-body-a">
-                    <table data-role="table" data-mode="columntoggle" class="table-stripe">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Formulario</th>
-                                <th>fecha</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>-</td>
-                                <td>-</td>
-                                <td>-</td>
-                            </tr>
-                            <tr>
-                                <td>-</td>
-                                <td>-</td>
-                                <td>-</td>
-                            </tr>
-                        </tbody>
-                    </table>
                     </div>
                 </div>
 
                 <div id="forms_pendientes" class="ui-corner-all custom-corners" style="margin-top:15px">
+
+                    <button id="btn_enviar_forms" onclick="envioFormsPend()" data-theme="">Enviar Formularios</button>
                     <div class="ui-bar ui-bar-a">
                         <h3> Formularios Pendientes </h3>
-                    </div>
-                    <div id="tbl_forms_pendientes"class="ui-body ui-body-a">
-                    <table data-role="table" data-mode="columntoggle" class="table-stripe">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Formulario</th>
-                                <th>fecha</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>-</td>
-                                <td>-</td>
-                                <td>-</td>
-                            </tr>
-                            <tr>
-                                <td>-</td>
-                                <td>-</td>
-                                <td>-</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    </div>                    
+                    <div id="tbl_forms_pendientes"class="ui-body ui-body-a">                    
                     </div>
                 </div>
             </div><!-- Fin Pagina DMS Forms -->
