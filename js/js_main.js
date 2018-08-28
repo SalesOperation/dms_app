@@ -5,8 +5,8 @@ var pdwWS  = '0BAD6CE456FCFBEF59544697D43E06D1';
 var vFlagTracking = false;
 var vTimerGPS; // = 30000;
 var vIdFormulario ='XO';
-var ws_url = 'http://localhost/ws_so/service_so.php'; 
-//var ws_url = 'https://190.4.63.207/ws_so/service_so.php';
+//var ws_url = 'http://localhost/ws_so/service_so.php'; 
+var ws_url = 'https://190.4.63.207/ws_so/service_so.php';
 
 var vDatosUsuario ={"user":"", "login":""};
 var vTitle ="Tracking Service Comercial Support";
