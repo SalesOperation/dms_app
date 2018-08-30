@@ -17,6 +17,7 @@
 
   <preference name="AndroidPersistentFileLocation" value="Internal" />
   <preference name="AndroidPersistentFileLocation" value="Compatibility" />
+  <preference name="orientation" value="portrait" />
   
   <!--<plugin name="cordova-plugin-battery-status" source="npm" spec="~1.1.1"/>
   <plugin name="cordova-plugin-media-capture" source="npm" spec="~1.2.0"/>
