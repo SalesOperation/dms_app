@@ -5,6 +5,8 @@ var pdwWS  = '0BAD6CE456FCFBEF59544697D43E06D1';
 var vFlagTracking = false;
 var vTimerGPS; // = 30000;
 var vIdFormulario ='XO';
+var vLat = 0;
+var vLng = 0;
 //var ws_url = 'http://localhost/ws_so/service_so.php'; 
 var ws_url = 'https://190.4.63.207/ws_so/service_so.php';
 
@@ -218,6 +220,9 @@ function show_datos_user(vUser){
 }
 
 function get_forms_info(){
+    $("#forms_pend").html('0');
+    $("#forms_sent").html('0');
+
     db.transaction(function(cmd2){
         cmd2.executeSql("SELECT status, count(1) as cant FROM tbl_forms_filled where substr(date,1,8) = ? group by status order by status", [getYMD(0)], function (cmd2, results) {
             var len = results.rows.length;
@@ -490,7 +495,10 @@ function onSuccess(position){
         sc = d.getSeconds();
     }
 
-    console.log(h +'+'+m);
+    //console.log(h +'+'+m);
+    vLat = position.coords.latitude;
+    vLng = position.coords.longitude;
+
     getMap(position.coords.latitude, position.coords.longitude);
 
     vQre = 'INSERT INTO records (fecha, lat, lng, user) VALUES(\'' + getYMD(0) + h + m + sc + '\',';
@@ -613,17 +621,12 @@ function tracking(){
         console.log('starting..');
         $("#startGPS").hide();
         $("#stopGPS").show();
-        //$("#btn_tack").attr('src', 'img/tracking.png');
-        //$("#lbl_tracking").html('Detener Tracking');
-        //$("#msj").html('Recorido Iniciado');
+
         vFlagTracking = true;
         getMapLocation();
         vIntervalGeo = setInterval(function(){ getMapLocation(); }, vTimerGPS);
 
     }else{
-        //$("#btn_tack").attr('src', 'img/play.png');
-        //$("#lbl_tracking").html('Iniciar Tracking');
-        //$("#msj").html('Recorido Finalizado');
         $("#startGPS").show();
         $("#stopGPS").hide();
         clearInterval(vIntervalGeo);
@@ -1222,8 +1225,14 @@ function envioFormsPend(){
 function envioForm(){
     var tempForm = [];
     var temArr = [];
-    tempForm.push({id_form:'', vdata:[], fech:''});
+    tempForm.push({id_form:'', vdata:[], fech:'', lat:0, lng:0});
     tempForm[0].id_form = vFormData.id_form;
+
+    try{
+        getMapLocation();
+    }catch(e){
+        console.log(e);
+    }
 
     for(i=0; i<vFormData.vdata.length; i++){
         //console.log(vFormData.vdata[i].id);
@@ -1232,7 +1241,9 @@ function envioForm(){
     }
     tempForm[0].vdata = JSON.stringify(temArr);
     tempForm[0].fech = getYMD(0) + getHMS();
-
+    tempForm[0].lat = vLat;
+    tempForm[0].lng = vLng;
+    
     //console.log((temArr).toString());
     $.ajax({
             url:ws_url,
@@ -1243,8 +1254,9 @@ function envioForm(){
                 console.log(data);
                 var vflag = data.split('/');
                 if(vflag[0] == 'SUCCESS'){
-                    vQuery = 'INSERT INTO tbl_forms_filled (id_form, dtos, date, status) ';
-                    vQuery += 'VALUES(\'' +  tempForm[0].id_form + '\',\'' + (tempForm[0].vdata).toString() + '\',' + tempForm[0].fech + ',1)';
+                    vQuery = 'INSERT INTO tbl_forms_filled (id_form, dtos, date, status, lat, lng) ';
+                    vQuery += 'VALUES(\'' +  tempForm[0].id_form + '\',\'' + (tempForm[0].vdata).toString() + '\',' + tempForm[0].fech + ',1,';
+                    vQuery += tempForm[0].lat + ','+ tempForm[0].lng  +')';
                     ejecutaSQL(vQuery, 0);        
 
                     $.mobile.loading( 'show', {
@@ -1276,8 +1288,9 @@ function envioForm(){
                     theme: 'a',
                     html: '<span><center><img src="img/noconection.png" width="60px" /></center><br />Servidor no responde.<br />Guardando Localmente</span>'
                 });
-                vQuery = 'INSERT INTO tbl_forms_filled (id_form, dtos, date, status) ';
-                vQuery += 'VALUES(\'' +  tempForm[0].id_form + '\',\'' + (tempForm[0].vdata).toString() + '\',' + tempForm[0].fech + ',0)';
+                vQuery = 'INSERT INTO tbl_forms_filled (id_form, dtos, date, status, lat, lng) ';
+                vQuery += 'VALUES(\'' +  tempForm[0].id_form + '\',\'' + (tempForm[0].vdata).toString() + '\',' + tempForm[0].fech + ',0,';
+                vQuery += tempForm[0].lat + ','+ tempForm[0].lng  +')';
                 ejecutaSQL(vQuery, 0);
 
                 setTimeout(function(){  

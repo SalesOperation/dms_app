@@ -156,6 +156,7 @@ function login(){
                         },
                         error: function(data){
                             alert('Error consultando el servidor..');
+                            setTimeout(function(){$.mobile.loading('hide');}, 1000);
                             console.log(data);
                         }
                 }); 
