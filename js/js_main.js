@@ -1228,77 +1228,81 @@ function envioForm(){
     tempForm.push({id_form:'', vdata:[], fech:'', lat:0, lng:0});
     tempForm[0].id_form = vFormData.id_form;
 
+    $.mobile.loading('show');
     try{
         getMapLocation();
     }catch(e){
         console.log(e);
     }
 
-    for(i=0; i<vFormData.vdata.length; i++){
-        //console.log(vFormData.vdata[i].id);
-        x1 = document.getElementById(vFormData.vdata[i].id).value;
-        temArr.push({q:vFormData.vdata[i].name, r:x1});
-    }
-    tempForm[0].vdata = JSON.stringify(temArr);
-    tempForm[0].fech = getYMD(0) + getHMS();
-    tempForm[0].lat = vLat;
-    tempForm[0].lng = vLng;
-    
-    //console.log((temArr).toString());
-    $.ajax({
-            url:ws_url,
-            type:'POST',
-            data:{m:302,vx:userWS, vy:pdwWS, ui:vDatosUsuario.user, forms:tempForm[0]},        
-            dataType:'text',
-            success: function(data){
-                console.log(data);
-                var vflag = data.split('/');
-                if(vflag[0] == 'SUCCESS'){
+    setTimeout(function(){
+        for(i=0; i<vFormData.vdata.length; i++){
+            //console.log(vFormData.vdata[i].id);
+            x1 = document.getElementById(vFormData.vdata[i].id).value;
+            temArr.push({q:vFormData.vdata[i].name, r:x1});
+        }
+
+        tempForm[0].vdata = JSON.stringify(temArr);
+        tempForm[0].fech = getYMD(0) + getHMS();
+        tempForm[0].lat = vLat;
+        tempForm[0].lng = vLng;
+        
+        //console.log((temArr).toString());
+        $.ajax({
+                url:ws_url,
+                type:'POST',
+                data:{m:302,vx:userWS, vy:pdwWS, ui:vDatosUsuario.user, forms:tempForm[0]},        
+                dataType:'text',
+                success: function(data){
+                    console.log(data);
+                    var vflag = data.split('/');
+                    if(vflag[0] == 'SUCCESS'){
+                        vQuery = 'INSERT INTO tbl_forms_filled (id_form, dtos, date, status, lat, lng) ';
+                        vQuery += 'VALUES(\'' +  tempForm[0].id_form + '\',\'' + (tempForm[0].vdata).toString() + '\',' + tempForm[0].fech + ',1,';
+                        vQuery += tempForm[0].lat + ','+ tempForm[0].lng  +')';
+                        ejecutaSQL(vQuery, 0);        
+
+                        $.mobile.loading( 'show', {
+                            text: 'Formulario enviado correctamente.',
+                            textVisible: true,
+                            textonly:true,
+                            theme: 'a',
+                            html: ''
+                        });
+                        setTimeout(function(){  $.mobile.loading('hide'); backButton(); }, 1200);
+                    }else{
+                        $.mobile.loading( 'show', {
+                            text: 'Error al intentar salvar formulario.',
+                            textVisible: true,
+                            textonly:true,
+                            theme: 'a',
+                            html: ''
+                        });
+                        setTimeout(function(){  $.mobile.loading('hide'); backButton(); }, 1200);
+                    }
+                    
+
+                }, 
+                error: function(error){
+                    $.mobile.loading( 'show', {
+                        text: '',
+                        textVisible: true,
+                        textonly:true,
+                        theme: 'a',
+                        html: '<span><center><img src="img/noconection.png" width="60px" /></center><br />Servidor no responde.<br />Guardando Localmente</span>'
+                    });
                     vQuery = 'INSERT INTO tbl_forms_filled (id_form, dtos, date, status, lat, lng) ';
-                    vQuery += 'VALUES(\'' +  tempForm[0].id_form + '\',\'' + (tempForm[0].vdata).toString() + '\',' + tempForm[0].fech + ',1,';
+                    vQuery += 'VALUES(\'' +  tempForm[0].id_form + '\',\'' + (tempForm[0].vdata).toString() + '\',' + tempForm[0].fech + ',0,';
                     vQuery += tempForm[0].lat + ','+ tempForm[0].lng  +')';
-                    ejecutaSQL(vQuery, 0);        
+                    ejecutaSQL(vQuery, 0);
 
-                    $.mobile.loading( 'show', {
-                        text: 'Formulario enviado correctamente.',
-                        textVisible: true,
-                        textonly:true,
-                        theme: 'a',
-                        html: ''
-                    });
-                    setTimeout(function(){  $.mobile.loading('hide'); backButton(); }, 1200);
-                }else{
-                    $.mobile.loading( 'show', {
-                        text: 'Error al intentar salvar formulario.',
-                        textVisible: true,
-                        textonly:true,
-                        theme: 'a',
-                        html: ''
-                    });
-                    setTimeout(function(){  $.mobile.loading('hide'); backButton(); }, 1200);
+                    setTimeout(function(){  
+                        $.mobile.loading('hide'); 
+                        backButton();
+                    }, 2000);
                 }
-                
-
-            }, 
-            error: function(error){
-                $.mobile.loading( 'show', {
-                    text: '',
-                    textVisible: true,
-                    textonly:true,
-                    theme: 'a',
-                    html: '<span><center><img src="img/noconection.png" width="60px" /></center><br />Servidor no responde.<br />Guardando Localmente</span>'
-                });
-                vQuery = 'INSERT INTO tbl_forms_filled (id_form, dtos, date, status, lat, lng) ';
-                vQuery += 'VALUES(\'' +  tempForm[0].id_form + '\',\'' + (tempForm[0].vdata).toString() + '\',' + tempForm[0].fech + ',0,';
-                vQuery += tempForm[0].lat + ','+ tempForm[0].lng  +')';
-                ejecutaSQL(vQuery, 0);
-
-                setTimeout(function(){  
-                    $.mobile.loading('hide'); 
-                    backButton();
-                }, 2000);
-            }
-        });      
+            });  
+    }, 4000);    
 
     
 }
