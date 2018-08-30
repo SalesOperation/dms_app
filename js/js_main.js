@@ -8,7 +8,7 @@ var vIdFormulario ='XO';
 //var ws_url = 'http://localhost/ws_so/service_so.php'; 
 var ws_url = 'https://190.4.63.207/ws_so/service_so.php';
 
-var vDatosUsuario ={"user":"", "login":""};
+var vDatosUsuario ={"user":"", "login":"", "name":"", "phone":0, "email":"na", "job":"na", "id_dms":0};
 var vTitle ="Tracking Service Comercial Support";
 var map;
 var pgActual = 0;
@@ -90,7 +90,7 @@ var app = {
 
 $(document).ready(function(e){
     setTimeout(function(){getMap(14.618086,-86.959082); }, 2000);
-    hide_pags();
+    hide_pags();    
 
     $("#dvDMS").show();
     $('#lbl_title').html('DMS EXPERIENCE');            
@@ -115,7 +115,7 @@ $(document).ready(function(e){
 
         if(parseInt(vLogin) != 1){ 
             db.transaction(function(cmd){   
-                cmd.executeSql("SELECT * FROM users where login = '1'", [], function (cmd, results) {
+                cmd.executeSql("SELECT * FROM users where login = 1", [], function (cmd, results) {
                     var len = results.rows.length, i;                    
                     i = 0;
                     
@@ -131,9 +131,11 @@ $(document).ready(function(e){
                                         ejecutaSQL(vQuery, 0);
                                         setTimeout(function(){window.location.replace('login.html');}, 800);
                                     }else{
-                                        
+                                        //console.log(results.rows.item(i).name);
                                         vDatosUsuario.user = results.rows.item(i).id;
                                         vDatosUsuario.login = 1;
+                                        show_datos_user(vDatosUsuario.user);
+                                        get_forms_info();
                                         logInOut(vDatosUsuario.user, '1');      
                                         
                                         $("#page").show();
@@ -155,6 +157,8 @@ $(document).ready(function(e){
             });
         }else{ 
 
+            show_datos_user(vDatosUsuario.user);
+            get_forms_info();
             $("#page").show();
         	$("#dvMain").show(); 
         	$("#bg_login").hide(); 
@@ -189,6 +193,47 @@ $(document).ready(function(e){
     }, 1000);
 
 });
+
+
+function show_datos_user(vUser){
+    db.transaction(function(cmd2){
+        cmd2.executeSql("SELECT * FROM users where id = ?", [vUser], function (cmd2, results) {
+            var len = results.rows.length;
+            if(len>0){
+                vDatosUsuario.user = results.rows.item(0).id;
+                vDatosUsuario.name = results.rows.item(0).name;
+                vDatosUsuario.email = results.rows.item(0).email;
+                vDatosUsuario.job = results.rows.item(0).job_title;
+                vDatosUsuario.id_dms = results.rows.item(0).id_dms;
+
+
+                $("#id_dms_user").html(vDatosUsuario.id_dms);
+                $("#uid_user").html(vDatosUsuario.user.toLowerCase());
+                $("#name_user").html(vDatosUsuario.name);
+                $("#email_user").html(vDatosUsuario.email);
+                $("#job_user").html(vDatosUsuario.job); 
+            }
+        });
+    });
+}
+
+function get_forms_info(){
+    db.transaction(function(cmd2){
+        cmd2.executeSql("SELECT status, count(1) as cant FROM tbl_forms_filled where substr(date,1,8) = ? group by status order by status", [getYMD(0)], function (cmd2, results) {
+            var len = results.rows.length;
+            //console.log(len);
+            if(len>0){
+                for(i=0; i<len; i++){
+                    if(results.rows.item(i).status == 0){
+                        $("#forms_pend").html(results.rows.item(i).cant);
+                    }else{
+                        $("#forms_sent").html(results.rows.item(i).cant);
+                    }
+                }
+            }
+        });
+    });
+}
 
 function show_Forms(){
 
@@ -354,6 +399,9 @@ function switchMenu(vIdFrom, vIdTo){
             $('#lbl_title').html('DMS EXPERIENCE');            
             $("#dvHead").show();
             $("#dvDMS").show();
+            show_datos_user(vDatosUsuario.user); 
+            get_forms_info();                                      
+
         break;
         case 1:            
             $("#pag4").hide();
@@ -379,6 +427,11 @@ function switchMenu(vIdFrom, vIdTo){
             $('#lbl_title').html('DOCUMENTOS DMS');
             $("#dvHead").show();
             show_Forms();
+            vfechini = getYMD(0);
+            vfechfin = getYMD(0);
+            $("#fechIniForm").val(vfechini.substr(0,4) + '-' + vfechini.substr(4,2) + '-' + vfechini.substr(6,2));
+            $("#fechFinForm").val(vfechfin.substr(0,4) + '-' + vfechfin.substr(4,2) + '-' + vfechfin.substr(6,2));
+
         break;
         case 100:
             hide_pags();
@@ -580,7 +633,7 @@ function tracking(){
 }
 
 function logout(){
-    console.log(vDatosUsuario.user);
+    //console.log(vDatosUsuario.user);
     logInOut(vDatosUsuario.user, '0');
     setTimeout(function(){ window.location.replace('index.html?user=0&login=0'); }, 800);
 }
@@ -1039,14 +1092,21 @@ function formsList(){
 }
 
 
-function formsEnviados(){
+function formsEnviados(){    
+
+    vIni = $("#fechIniForm").val().replace('-', '').replace('-', '');
+    vFin = $("#fechFinForm").val().replace('-', '').replace('-', '');
+
+    $.mobile.loading('show');
+
     db.transaction(function(cmd){   
-        cmd.executeSql('SELECT * FROM tbl_forms_filled where status =?', [1], function (cmd, results) {
+        cmd.executeSql('SELECT * FROM tbl_forms_filled where status =? and substr(date,1,8) between ? and ?', [1, vIni, vFin], function (cmd, results) {
             var len = results.rows.length;
             vStrHtml = '';
             vStrHtml += '<table data-role="table" data-mode="columntoggle" class="table-stripe">';
             vStrHtml +=  '<thead><tr><th data-priority="1">ID</th><th data-priority="0">Formulario</th><th>fecha</th></tr></thead>';
             vStrHtml +=  '<tbody>';
+            //console.log(len);
             for(i=0; i<len; i++){
                 vName = results.rows[i].id_form.split('_')
                 vStrHtml +=  '<tr>';
@@ -1061,6 +1121,7 @@ function formsEnviados(){
             //console.log(vStrHtml);
             $("#tbl_forms_enviados").html(vStrHtml);
             $("#tbl_forms_enviados").trigger('create');
+            $.mobile.loading('hide');
         });
     });
     $("#forms_list").hide();
@@ -1070,6 +1131,9 @@ function formsEnviados(){
 
 function formsPendientes(){
     vFormsPendientes = [];
+
+    $.mobile.loading('show');
+
     db.transaction(function(cmd){   
         cmd.executeSql('SELECT * FROM tbl_forms_filled where status =?', [0], function (cmd, results) {
             var len = results.rows.length;
@@ -1092,6 +1156,7 @@ function formsPendientes(){
             //console.log(vStrHtml);
             $("#tbl_forms_pendientes").html(vStrHtml);
             $("#tbl_forms_pendientes").trigger('create');
+            $.mobile.loading('hide');
         });
     });
     
@@ -1137,7 +1202,7 @@ function envioFormsPend(){
                 contRegs++;                
                 if(contRegs==vFormsPendientes.length){
                     $.mobile.loading( 'show', {
-                        text: ' [' + contForms + '] Enviados Correctamente',
+                        text: ' [' + contForms + '] Forms Enviados Correctamente',
                         textVisible: true,
                         textonly:true,
                         theme: 'a',
@@ -1168,18 +1233,18 @@ function envioForm(){
     tempForm[0].vdata = JSON.stringify(temArr);
     tempForm[0].fech = getYMD(0) + getHMS();
 
-    console.log(tempForm);
+    //console.log((temArr).toString());
     $.ajax({
             url:ws_url,
             type:'POST',
             data:{m:302,vx:userWS, vy:pdwWS, ui:vDatosUsuario.user, forms:tempForm[0]},        
             dataType:'text',
             success: function(data){
-                //console.log(data);
+                console.log(data);
                 var vflag = data.split('/');
                 if(vflag[0] == 'SUCCESS'){
                     vQuery = 'INSERT INTO tbl_forms_filled (id_form, dtos, date, status) ';
-                    vQuery += 'VALUES(\'' +  tempForm[0].id_form + '\',\'' + JSON.stringify(tempForm[0].vdata) + '\',' + tempForm[0].fech + ',1)';
+                    vQuery += 'VALUES(\'' +  tempForm[0].id_form + '\',\'' + (tempForm[0].vdata).toString() + '\',' + tempForm[0].fech + ',1)';
                     ejecutaSQL(vQuery, 0);        
 
                     $.mobile.loading( 'show', {
@@ -1212,7 +1277,7 @@ function envioForm(){
                     html: '<span><center><img src="img/noconection.png" width="60px" /></center><br />Servidor no responde.<br />Guardando Localmente</span>'
                 });
                 vQuery = 'INSERT INTO tbl_forms_filled (id_form, dtos, date, status) ';
-                vQuery += 'VALUES(\'' +  tempForm[0].id_form + '\',\'' + JSON.stringify(tempForm[0].vdata) + '\',' + tempForm[0].fech + ',0)';
+                vQuery += 'VALUES(\'' +  tempForm[0].id_form + '\',\'' + (tempForm[0].vdata).toString() + '\',' + tempForm[0].fech + ',0)';
                 ejecutaSQL(vQuery, 0);
 
                 setTimeout(function(){  

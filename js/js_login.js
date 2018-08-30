@@ -93,63 +93,74 @@ function msj(vStr){
 }
 
 function login(){
-		var usr = String($("#user").val()).trim().toLowerCase();
-		var pwd = String($("#pwd").val()).trim();
-        var vQuery = '';
 
-		db.transaction(function(cmd){   
-            cmd.executeSql("SELECT * FROM users where id=? and status='1'", [usr], function (cmd, results) {
-                var len = results.rows.length, i;
+	var usr = String($("#user").val()).trim().toLowerCase();
+	var pwd = String($("#pwd").val()).trim();
+    var vQuery = '';
 
-                if(len>0){
-                    //alert(len);
-                    for (i = 0; i < len; i++) {
-                        //alert(results.rows.item(i).login);
-                        if(results.rows.item(i).pwd == pwd){
-                            //logInOut($scope.usuario, '1');
-                            //sleep(300);
-                            window.location.replace('index.html?user=' + usr +  '&login=1');
-                        }else{
-                            $("#msj_err").html('Clave Incorrecta');
+    $.mobile.loading('show');                            
+
+	db.transaction(function(cmd){   
+        cmd.executeSql("SELECT * FROM users where id=? and status=1", [usr], function (cmd, results) {
+            var len = results.rows.length, i;
+
+            if(len>0){
+                //alert(len);
+                for (i = 0; i < len; i++) {
+                    //alert(results.rows.item(i).login);
+                    if(results.rows.item(i).pwd == pwd){
+                        //logInOut($scope.usuario, '1');
+                        //sleep(300);
+                        window.location.replace('index.html?user=' + usr +  '&login=1');
+                    }else{
+                        cont_logs ++;
+                        $("#msj_err").html('Clave Incorrecta');
+                        if(cont_logs >= 3){
+                            vQuery = 'DELETE FROM users where id =\'' + usr + '\'';
+                            ejecutaSQL(vQuery, 0);
                         }
-                       //alert(results.rows.item(i).id);          
+                        setTimeout(function(){$.mobile.loading('hide');}, 1000);
                     }
-                }else{
-                    $.ajax( {type:'POST',
-                            url: ws_url,
-                            dataType:'json',
-                            data: {m:100, vx:userWS, vy:pdwWS, ui:usr, pw:pwd},
-                            beforsend: function(){
-                                $.mobile.loading('show');
-                            },
-                            success: function(data){ 
-                                console.log(data);
-
-                                setTimeout(function(){$.mobile.loading('hide');}, 1000);
-                                
-                                if(data[0].flag == 'true'){
-                                    console.log('Log OK');
-                                    vQuery = 'INSERT INTO users (id, pwd, name, phone, status,login,type)';
-                                    vQuery += 'VALUES(\''+ usr +'\',\''+ pwd +'\',\''+ usr +'\',0,1,1,\'vdr\')';
-                                    ejecutaSQL(vQuery, 0);
-                                    $("#msj_err").html('');
-                                    setTimeout(function(){ window.location.replace('index.html?user=' + usr +  '&login=1'); }, 800);
-                                }else{
-                                    cont_logs += 1;
-                                    console.log('Log Bad');
-                                    $("#msj_err").html("Usuario o Clave Incorecto");
-                                    if(cont_logs >= 3){
-                                        vQuery = 'DELETE FROM users where id =\'' + usr + '\'';
-                                        ejecutaSQL(vQuery, 0);
-                                    }
-                                }  
-                            },
-                            error: function(data){
-                                alert('Error consultando el servidor..');
-                            }
-                    }); 
-                    //$("#msj_err").html("Usuario Incorecto");
+                   //alert(results.rows.item(i).id);          
                 }
-            });
+            }else{
+                $.ajax( {type:'POST',
+                        url: ws_url,
+                        dataType:'json',
+                        data: {m:100, vx:userWS, vy:pdwWS, ui:usr, pw:pwd},
+                        success: function(data){ 
+                            console.log(data);
+
+                            setTimeout(function(){$.mobile.loading('hide');}, 1000);
+                            
+                            if(data[0].flag == 'true'){
+                                console.log('Log OK');
+                                vQuery = 'INSERT INTO users (id, pwd, name, phone, email, job_title, status, login,type, id_dms)';
+                                vQuery += 'VALUES(\''+ usr +'\',\''+ pwd +'\',\''+ data[0].vdatos[0].name +'\',';
+                                vQuery += data[0].vdatos[0].phone + ',';
+                                vQuery += '\'' + data[0].vdatos[0].email + '\',';
+                                vQuery += '\'' + data[0].vdatos[0].job + '\',1,1,\'-\',';
+                                vQuery += + data[0].vdatos[0].id_dms +')';
+                                ejecutaSQL(vQuery, 0);
+                                $("#msj_err").html('');
+                                setTimeout(function(){ window.location.replace('index.html?user=' + usr +  '&login=1'); }, 800);
+                            }else{
+                                cont_logs += 1;
+                                //console.log('Log Bad');
+                                $("#msj_err").html("Usuario o Clave Incorecto");
+                                if(cont_logs >= 3){
+                                    vQuery = 'DELETE FROM users where id =\'' + usr + '\'';
+                                    ejecutaSQL(vQuery, 0);
+                                }
+                            }  
+                        },
+                        error: function(data){
+                            alert('Error consultando el servidor..');
+                            console.log(data);
+                        }
+                }); 
+                //$("#msj_err").html("Usuario Incorecto");
+            }
         });
+    });
 }
