@@ -7,8 +7,8 @@ var vTimerGPS; // = 30000;
 var vIdFormulario ='XO';
 var vLat = 0;
 var vLng = 0;
-var ws_url = 'http://localhost/ws_so/service_so.php'; 
-//var ws_url = 'https://190.4.63.207/ws_so/service_so.php';
+//var ws_url = 'http://localhost/ws_so/service_so.php'; 
+var ws_url = 'https://190.4.63.207/ws_so/service_so.php';
 
 var vDatosUsuario ={"user":"", "login":"", "name":"", "phone":0, "email":"na", "job":"na", "id_dms":0};
 var vTitle ="Tracking Service Comercial Support";
