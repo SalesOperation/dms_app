@@ -138,7 +138,7 @@ $(document).ready(function(e){
                                         vDatosUsuario.login = 1;
                                         show_datos_user(vDatosUsuario.user);
                                         get_forms_info();
-                                        logInOut(vDatosUsuario.user, '1');      
+                                        logInOut(vDatosUsuario.user, 1);      
                                         
                                         $("#page").show();
                                         $("#dvMain").show();
@@ -637,7 +637,7 @@ function tracking(){
 
 function logout(){
     //console.log(vDatosUsuario.user);
-    logInOut(vDatosUsuario.user, '0');
+    logInOut(vDatosUsuario.user, 0);
     setTimeout(function(){ window.location.replace('index.html?user=0&login=0'); }, 800);
 }
 
