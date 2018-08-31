@@ -522,12 +522,13 @@ function onSuccess(position){
     vLat = position.coords.latitude;
     vLng = position.coords.longitude;
 
+    
+    saveGPS(getYMD(0) + h + m + sc, position.coords.latitude, position.coords.longitude, vDatosUsuario.user); 
     getMap(position.coords.latitude, position.coords.longitude);
 
     vQre = 'INSERT INTO records (fecha, lat, lng, user) VALUES(\'' + getYMD(0) + h + m + sc + '\',';
     vQre += position.coords.latitude + ',' + position.coords.longitude + ',\''+ vDatosUsuario.user + '\')';
-    //ejecutaSQL(vQre, 0);
-    saveGPS(getYMD(0) + h + m + sc, position.coords.latitude, position.coords.longitude, vDatosUsuario.user);    
+    //ejecutaSQL(vQre, 0);   
     
     
     //$("#test").append(d.getHours() +':'+ d.getMinutes() + '<br />' + position.coords.latitude + '/' + position.coords.longitude + '<br />');
