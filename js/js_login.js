@@ -1,6 +1,6 @@
 
-//var ws_url = 'http://localhost/ws_so/service_so.php';
-var ws_url = 'https://190.4.63.207/ws_so/service_so.php';
+var ws_url = 'http://localhost/ws_so/service_so.php';
+//var ws_url = 'https://190.4.63.207/ws_so/service_so.php';
 var userWS = '69BA4B9D76B7C3452E2A48B7BF9790FE';
 var pdwWS  = '0BAD6CE456FCFBEF59544697D43E06D1';
 var cont_logs = 0;

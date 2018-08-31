@@ -1,6 +1,6 @@
 
 
-var db = openDatabase('db_dms_forms', '1.0', 'DB for DMS App Forms', 20 * 1024 * 1024);
+var db = openDatabase('db_dms_forms', '1.0', 'DB for DMS App Forms', 10 * 1024 * 1024);
 
 db.transaction(function(cmd){
     var vFlag = 0;
