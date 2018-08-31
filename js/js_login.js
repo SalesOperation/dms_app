@@ -1,6 +1,6 @@
 
-//var ws_url = 'http://localhost/ws_so/service_so.php';
-var ws_url = 'https://190.4.63.207/ws_so/service_so.php';
+var ws_url = 'http://localhost/ws_so/service_so.php';
+//var ws_url = 'https://190.4.63.207/ws_so/service_so.php';
 var userWS = '69BA4B9D76B7C3452E2A48B7BF9790FE';
 var pdwWS  = '0BAD6CE456FCFBEF59544697D43E06D1';
 var cont_logs = 0;
@@ -97,6 +97,7 @@ function login(){
 	var usr = String($("#user").val()).trim().toLowerCase();
 	var pwd = String($("#pwd").val()).trim();
     var vQuery = '';
+    var vDateLicense = getYMD(0);
 
     $.mobile.loading('show');                            
 
@@ -108,13 +109,16 @@ function login(){
                 //alert(len);
                 for (i = 0; i < len; i++) {
                     //alert(results.rows.item(i).login);
-                    if(results.rows.item(i).pwd == pwd){
-                        //logInOut($scope.usuario, '1');
+                    if(results.rows.item(i).pwd == pwd && vDateLicense <= results.rows.item(0).license){
                         //sleep(300);
                         window.location.replace('index.html?user=' + usr +  '&login=1');
                     }else{
                         cont_logs ++;
-                        $("#msj_err").html('Clave Incorrecta');
+                        if(vDateLicense <= results.rows.item(0).license){
+                            $("#msj_err").html('Acceso Denegado');
+                        }else{
+                            $("#msj_err").html('Clave Incorrecta');
+                        }
                         if(cont_logs >= 3){
                             vQuery = 'DELETE FROM users where id =\'' + usr + '\'';
                             ejecutaSQL(vQuery, 0);
@@ -135,12 +139,13 @@ function login(){
                             
                             if(data[0].flag == 'true'){
                                 console.log('Log OK');
-                                vQuery = 'INSERT INTO users (id, pwd, name, phone, email, job_title, status, login,type, id_dms)';
+                                vQuery = 'INSERT INTO users (id, pwd, name, phone, email, job_title, status, login,type, id_dms, license)';
                                 vQuery += 'VALUES(\''+ usr +'\',\''+ pwd +'\',\''+ data[0].vdatos[0].name +'\',';
                                 vQuery += data[0].vdatos[0].phone + ',';
                                 vQuery += '\'' + data[0].vdatos[0].email + '\',';
                                 vQuery += '\'' + data[0].vdatos[0].job + '\',1,1,\'-\',';
-                                vQuery += + data[0].vdatos[0].id_dms +')';
+                                vQuery += data[0].vdatos[0].id_dms +',';
+                                vQuery += data[0].vdatos[0].license +')';
                                 ejecutaSQL(vQuery, 0);
                                 $("#msj_err").html('');
                                 setTimeout(function(){ window.location.replace('index.html?user=' + usr +  '&login=1'); }, 800);
@@ -164,4 +169,27 @@ function login(){
             }
         });
     });
+}
+
+
+function getYMD(vDays){
+    var vToday = new Date();
+    var time = vToday.getTime();
+    var milsecs = parseInt(vDays*24*60*60*1000);
+    vToday.setTime(time + milsecs);
+
+    var strDate = '';
+    strDate = vToday.getFullYear();
+
+    if(parseInt(vToday.getMonth() + 1) < 10 ){
+        strDate += '0' + (vToday.getMonth()+1);
+    }else{
+        strDate += '' + (vToday.getMonth()+1);
+    }
+    if(parseInt(vToday.getDate()) < 10 ){
+        strDate += '0' + vToday.getDate();
+    }else{
+        strDate += '' + vToday.getDate();
+    }
+    return strDate;
 }

@@ -4,7 +4,7 @@ var db = openDatabase('db_dms_forms', '1.0', 'DB for DMS App Forms', 20 * 1024 *
 
 db.transaction(function(cmd){
     var vFlag = 0;
-    cmd.executeSql('CREATE TABLE IF NOT EXISTS users (id unique, pwd, name, phone, email, job_title, status, login, type, id_dms)');
+    cmd.executeSql('CREATE TABLE IF NOT EXISTS users (id unique, pwd, name, phone, email, job_title, status, login, type, id_dms, license)');
     cmd.executeSql('CREATE TABLE IF NOT EXISTS params (id unique, dvalue)');
     cmd.executeSql('CREATE TABLE IF NOT EXISTS records (fecha, lat, lng, user)');    
     cmd.executeSql('CREATE TABLE IF NOT EXISTS tbl_forms (id unique, desc, type, version, dtos, udt_dt)');      
@@ -21,7 +21,7 @@ db.transaction(function(cmd){
                 vFlag = 1;
             }
             if(vFlag == 0){
-                cmd.executeSql('INSERT INTO users (id, pwd, name, phone, email, job_title, status,login,type, id_dms) VALUES (?,?,?,?,?,?,?,?,?,?)', ['admin','admin123', 'Administrador', '99999999','NA', 'NA', 1,0,'admin', 9]); 
+                cmd.executeSql('INSERT INTO users (id, pwd, name, phone, email, job_title, status,login,type, id_dms, license) VALUES (?,?,?,?,?,?,?,?,?,?,?)', ['admin','admin123', 'Administrador', '99999999','NA', 'NA', 1,0,'admin', 9, 99999999]); 
                 cmd.executeSql('INSERT INTO params (id, dvalue) VALUES (?,?)', [1,30000]); 
             }
         //cmd.executeSql('INSERT INTO kpi_data_zonas_hist (id,zona, cnl, sub_cnl, ejecutado,forecast,budget,fecha,year,month,unit) VALUES (?,?,?,?,?,?,?,?,?,?,?)', ['1101','0', '1', '1','152325','15262','15626','20170502','2017','5','UND']);

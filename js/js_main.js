@@ -7,8 +7,8 @@ var vTimerGPS; // = 30000;
 var vIdFormulario ='XO';
 var vLat = 0;
 var vLng = 0;
-//var ws_url = 'http://localhost/ws_so/service_so.php'; 
-var ws_url = 'https://190.4.63.207/ws_so/service_so.php';
+var ws_url = 'http://localhost/ws_so/service_so.php'; 
+//var ws_url = 'https://190.4.63.207/ws_so/service_so.php';
 
 var vDatosUsuario ={"user":"", "login":"", "name":"", "phone":0, "email":"na", "job":"na", "id_dms":0};
 var vTitle ="Tracking Service Comercial Support";
@@ -111,17 +111,20 @@ $(document).ready(function(e){
     function validaLogin(){
         var tempLogin = getParams();
         vLogin = tempLogin.login;
+        vDateLicense = getYMD(0);
 
         vDatosUsuario.user = tempLogin.user;
         vDatosUsuario.login = vLogin;
 
         if(parseInt(vLogin) != 1){ 
             db.transaction(function(cmd){   
-                cmd.executeSql("SELECT * FROM users where login = 1", [], function (cmd, results) {
+                cmd.executeSql("SELECT * FROM users where login = ? ", [1], function (cmd, results) {
                     var len = results.rows.length, i;                    
                     i = 0;
-                    
-                    if(len>0){
+
+                    if(len > 0 && vDateLicense > results.rows.item(0).license){
+                        //console.log('Licencia Vencida');
+                        console.log(results.rows.item(i).id);
                         $.ajax( {type:'POST',
                                 url: ws_url,
                                 dataType:'json',
@@ -133,6 +136,13 @@ $(document).ready(function(e){
                                         ejecutaSQL(vQuery, 0);
                                         setTimeout(function(){window.location.replace('login.html');}, 800);
                                     }else{
+
+                                        if(vDateLicense>data[0].vdatos[0].license){
+                                            setTimeout(function(){window.location.replace('login.html');}, 800);
+                                        }
+
+                                        vQuery = 'UPDATE users SET license = '+ data[0].vdatos[0].license +' WHERE id = \'' + results.rows.item(i).id + '\'';
+                                        ejecutaSQL(vQuery, 0);
                                         //console.log(results.rows.item(i).name);
                                         vDatosUsuario.user = results.rows.item(i).id;
                                         vDatosUsuario.login = 1;
@@ -147,12 +157,25 @@ $(document).ready(function(e){
                                     }
                                 },
                                 error: function(data){
-                                    //alert('Error consultando el servidor..');
+                                    alert('Error consultando el servidor..');
                                     setTimeout(function(){window.location.replace('login.html');}, 800);
                                 }
                         });                        	                                           
-                    }else{   
-                        window.location.replace('login.html');                         
+                    }else if (len > 0){   
+                        //window.location.replace('login.html');                         
+                        console.log('Loged In');
+                        vDatosUsuario.user = results.rows.item(i).id;
+                        vDatosUsuario.login = 1;
+                        show_datos_user(vDatosUsuario.user);
+                        get_forms_info();
+                        logInOut(vDatosUsuario.user, 1);      
+                        
+                        $("#page").show();
+                        $("#dvMain").show();
+                        $("#bg_login").hide();
+                        $("#dvUserName").html(vDatosUsuario.user);
+                    }else{
+                        window.location.replace('login.html'); 
                     }
                     //leeSMSs(); 
                 });
@@ -164,7 +187,7 @@ $(document).ready(function(e){
             $("#page").show();
         	$("#dvMain").show(); 
         	$("#bg_login").hide(); 
-            logInOut(tempLogin.user, '1'); 	            
+            logInOut(tempLogin.user, 1); 	            
             $("#dvUserName").html(vDatosUsuario.user);
             //sleep(400);
         }
@@ -1051,13 +1074,16 @@ function updateForms(){
             vQry = '';
 
             // Borra Forms a actualizar
-            for(i=0;i<data.length; i++){
+            /*for(i=0;i<data.length; i++){
 
                 vQry = 'DELETE FROM tbl_forms';
                 vQry += ' WHERE id = \'' + data[i].id + '\'';
 
                 ejecutaSQL(vQry, 0); 
-            }
+            }*/
+            vQry = 'DELETE FROM tbl_forms';
+            ejecutaSQL(vQry, 0); 
+
 
             for(i=0;i<data.length; i++){
 
