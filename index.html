@@ -308,7 +308,7 @@
 
 
     <!-- Menu Lateral -->
-    <div data-role="panel" data-display="overlay" id="dvMenu" data-theme="c" style="position: fixed">
+    <div data-role="panel" data-display="overlay" id="dvMenu" data-theme="c" style="position: fixed;">
         <ul data-role="listview">
             <li data-icon="false" style="background-color:#0B0B61; border:0; margin-left:-15px; margin-top:10px; margin-bottom:5px">
                 <table width="100%">
@@ -351,7 +351,7 @@
                 <a href="#" style="background-color: #0B0B61; border:0; border-top:solid thin #0A0A2A" onclick="switchMenu(1,1)"></a>
             </li>-->
             <li data-icon="false" style="background-color:#0B0B61; border:0; padding:0">
-                <br /><br /><br /><br />
+                <br /><br /><br />
             </li>
             <li data-icon="false" style="background-color:#0B0B61; border:0; padding:0">
                 <div class="lbar"></div>
@@ -387,6 +387,7 @@ function resizer(){
 
     $("#float_btn").css({'margin-top':vH-110, 'margin-left': vW - 100});
     $("#mapHorus").css('min-height', vW*0.6);
+    $("#dvMenu").css({'height': $(window).height(), "overflow":'scroll'});
 }  
 
 
