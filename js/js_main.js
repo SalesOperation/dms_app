@@ -7,8 +7,8 @@ var vTimerGPS; // = 30000;
 var vIdFormulario ='XO';
 var vLat = 0;
 var vLng = 0;
-//var ws_url = 'http://localhost/ws_so/service_so.php'; 
-var ws_url = 'https://190.4.63.207/ws_so/service_so.php';
+var ws_url = 'http://localhost/ws_so/service_so.php'; 
+//var ws_url = 'https://190.4.63.207/ws_so/service_so.php';
 
 var vDatosUsuario ={"user":"", "login":"", "name":"", "phone":0, "email":"na", "job":"na", "id_dms":0};
 var vTitle ="Tracking Service Comercial Support";
@@ -522,7 +522,7 @@ function onSuccess(position){
     vLat = position.coords.latitude;
     vLng = position.coords.longitude;
 
-    
+
     saveGPS(getYMD(0) + h + m + sc, position.coords.latitude, position.coords.longitude, vDatosUsuario.user); 
     getMap(position.coords.latitude, position.coords.longitude);
 
@@ -1172,7 +1172,7 @@ function formsPendientes(){
             vStrHtml +=  '<thead><tr><th data-priority="1">ID</th><th data-priority="0">Formulario</th><th>fecha</th></tr></thead>';
             vStrHtml +=  '<tbody>';
             for(i=0; i<len; i++){
-                vFormsPendientes.push({id_form:results.rows[i].id_form, vdata:results.rows[i].dtos, fech:results.rows[i].date});
+                vFormsPendientes.push({id_form:results.rows[i].id_form, vdata:results.rows[i].dtos, fech:results.rows[i].date, lat:results.rows[i].lat, lng:results.rows[i].lng});
                 vName = results.rows[i].id_form.split('_')
                 vStrHtml +=  '<tr>';
                 vStrHtml +=  '<td>'+ results.rows[i].id_form +'</td>';
@@ -1200,9 +1200,10 @@ function formsPendientes(){
 function envioFormsPend(){
     var contForms = 0;
     var contRegs = 0;
-    //console.log(vFormsPendientes);
     for(i=0; i<vFormsPendientes.length; i++){
+        $.mobile.loading('show');
         //console.log(vFormsPendientes); 
+
         $.ajax({
             url:ws_url,
             type:'POST',
@@ -1215,9 +1216,12 @@ function envioFormsPend(){
                     vQuery = 'UPDATE tbl_forms_filled SET status=1 where id_form=\'' + vflag[1] + '\'';
                     ejecutaSQL(vQuery, 0);                        
                     contForms ++;
-                }            
+                }else{
+                    console.log(data);
+                }           
             }, 
             error: function(error){
+                //console.log('error');
                 $.mobile.loading( 'show', {
                     text: '',
                     textVisible: true,
@@ -1228,7 +1232,7 @@ function envioFormsPend(){
                 setTimeout(function(){  $.mobile.loading('hide'); }, 2000);
             },
             complete: function(e){
-                //console.log(e.responseText);
+                //console.log(e);
                 contRegs++;                
                 if(contRegs==vFormsPendientes.length){
                     $.mobile.loading( 'show', {
@@ -1238,15 +1242,12 @@ function envioFormsPend(){
                         theme: 'a',
                         html: ''
                     });
-                    formsPendientes();
-                    setTimeout(function(){  $.mobile.loading('hide'); }, 2000);
+                    setTimeout(function(){  $.mobile.loading('hide'); 
+                    formsPendientes(); }, 2000);
                 }
             }
-        });        
-    }
-    
-
-    
+        });
+    }   
 }
 
 function envioForm(){
