@@ -28,7 +28,8 @@ var pagRoot = [{id:0, back:0},
                 {id:1, back:0},
                 {id:2, back:0},
                 {id:3, back:0},
-                {id:100, back:3}];
+                {id:100, back:3},
+                {id:101, back:3}];
 var app = {
     
     //alert(getParams('user'));
@@ -82,6 +83,7 @@ var app = {
 
         document.addEventListener('backbutton', function(e){
             console.log('..');
+            backButton();
        //     //window.plugins.toast.show('Back Bloq..', 1000, 'bottom');          
         });
         
@@ -332,6 +334,7 @@ function hide_pags(){
     $("#dvDMS").hide();
     $("#dvHead").hide();
     $('#dv_forms_template').hide();
+    $("#formsRPT").hide();
 
     //Forms DMS    
     $("#forms_enviados").hide();
@@ -993,7 +996,7 @@ function drawForm(vItems, vtittle){
         vStrFrom += temp[j];
     }
     
-    vStrFrom +=  drawObject(201, 'btn1', 'Enviar', [], 'envioForm()');
+    vStrFrom +=  drawObject(201, 'btn1', 'Continuar', [], 'continuarForms()');
     /*vStrFrom += '<script type="text/javascript">';
     vStrFrom += 'function show(){ alert(\'hello \' + $("#txt1").val() + \'-\'+ $("#txt8").val());  } ';
     vStrFrom += 'function chngOp1(){ if($("#op1").val()=="1001"){ $("#txt8").parent().hide(); $(\'label[for="txt8"]\').hide();}else{ $("#txt8").parent().show(); $(\'label[for="txt8"]\').show(); } }'; 
@@ -1119,6 +1122,7 @@ function formsList(){
     $("#forms_list").show();
     $("#forms_enviados").hide();
     $("#forms_pendientes").hide();
+    $("#formsRPT").hide();
 }
 
 
@@ -1133,15 +1137,15 @@ function formsEnviados(){
         cmd.executeSql('SELECT * FROM tbl_forms_filled where status =? and substr(date,1,8) between ? and ?', [1, vIni, vFin], function (cmd, results) {
             var len = results.rows.length;
             vStrHtml = '';
-            vStrHtml += '<table data-role="table" data-mode="columntoggle" class="table-stripe">';
-            vStrHtml +=  '<thead><tr><th data-priority="1">ID</th><th data-priority="0">Formulario</th><th>fecha</th></tr></thead>';
+            vStrHtml += '<table data-role="table" data-mode="columntoggle" class="table-stripe ui-responsive">';
+            vStrHtml +=  '<thead><tr><th data-priority="2">ID</th><th data-priority="0">Formulario</th><th data-priority="1">fecha</th></tr></thead>';
             vStrHtml +=  '<tbody>';
             //console.log(len);
             for(i=0; i<len; i++){
                 vName = results.rows[i].id_form.split('_')
                 vStrHtml +=  '<tr>';
                 vStrHtml +=  '<td>'+ results.rows[i].id_form +'</td>';
-                vStrHtml +=  '<td>'+ vName[0] +'</td>';
+                vStrHtml +=  '<td><a href="#" onclick="prevForm(\''+ results.rows[i].id_form  +'\', 0)">'+ vName[0] +' </a></td>';
                 vStrHtml +=  '<td>'+ results.rows[i].date.toString().substr(0,8) + ' '
                 vStrHtml +=  results.rows[i].date.toString().substr(8,2) +':'+ results.rows[i].date.toString().substr(10,2) + '</td>';
                 vStrHtml +=  '</tr>';
@@ -1154,6 +1158,7 @@ function formsEnviados(){
             $.mobile.loading('hide');
         });
     });
+    $("#formsRPT").hide();
     $("#forms_list").hide();
     $("#forms_pendientes").hide();
     $("#forms_enviados").show();
@@ -1176,7 +1181,7 @@ function formsPendientes(){
                 vName = results.rows[i].id_form.split('_')
                 vStrHtml +=  '<tr>';
                 vStrHtml +=  '<td>'+ results.rows[i].id_form +'</td>';
-                vStrHtml +=  '<td>'+ vName[0] +'</td>';
+                vStrHtml +=  '<td><a href="#" onclick="prevForm(\''+ results.rows[i].id_form  +'\', 0)">'+ vName[0] +'</a></td>';
                 vStrHtml +=  '<td>'+ results.rows[i].date.toString().substr(0,8) + ' '
                 vStrHtml +=  results.rows[i].date.toString().substr(8,2) +':'+ results.rows[i].date.toString().substr(10,2) + '</td>';
                 vStrHtml +=  '</tr>';
@@ -1190,6 +1195,7 @@ function formsPendientes(){
         });
     });
     
+    $("#formsRPT").hide();
     $("#forms_list").hide();
     $("#forms_pendientes").show();
     $("#forms_enviados").hide();
@@ -1250,7 +1256,7 @@ function envioFormsPend(){
     }   
 }
 
-function envioForm(){
+function continuarForms(){
     var tempForm = [];
     var temArr = [];
     tempForm.push({id_form:'', vdata:[], fech:'', lat:0, lng:0});
@@ -1263,6 +1269,7 @@ function envioForm(){
         console.log(e);
     }
 
+    try{
     setTimeout(function(){
         for(i=0; i<vFormData.vdata.length; i++){
             //console.log(vFormData.vdata[i].id);
@@ -1275,62 +1282,184 @@ function envioForm(){
         tempForm[0].lat = vLat;
         tempForm[0].lng = vLng;
         
-        //console.log((temArr).toString());
-        $.ajax({
-                url:ws_url,
-                type:'POST',
-                data:{m:302,vx:userWS, vy:pdwWS, ui:vDatosUsuario.user, forms:tempForm[0]},        
-                dataType:'text',
-                success: function(data){
-                    console.log(data);
-                    var vflag = data.split('/');
-                    if(vflag[0] == 'SUCCESS'){
-                        vQuery = 'INSERT INTO tbl_forms_filled (id_form, dtos, date, status, lat, lng) ';
-                        vQuery += 'VALUES(\'' +  tempForm[0].id_form + '\',\'' + (tempForm[0].vdata).toString() + '\',' + tempForm[0].fech + ',1,';
-                        vQuery += tempForm[0].lat + ','+ tempForm[0].lng  +')';
-                        ejecutaSQL(vQuery, 0);        
+        vFormData = tempForm;
+        //console.log(vFormData[0].id_form);
+        prevForm(vFormData[0].id_form, 1);
 
-                        $.mobile.loading( 'show', {
-                            text: 'Formulario enviado correctamente.',
-                            textVisible: true,
-                            textonly:true,
-                            theme: 'a',
-                            html: ''
-                        });
-                        setTimeout(function(){  $.mobile.loading('hide'); backButton(); }, 1200);
-                    }else{
-                        $.mobile.loading( 'show', {
-                            text: 'Error al intentar salvar formulario.',
-                            textVisible: true,
-                            textonly:true,
-                            theme: 'a',
-                            html: ''
-                        });
-                        setTimeout(function(){  $.mobile.loading('hide'); backButton(); }, 1200);
-                    }
-                    
+    }, 4000);
+    }catch(e){
+        console.log(e);
+        alert('Error Generando Formulario');
+    }
+}
 
-                }, 
-                error: function(error){
+function envioForm(){
+
+    $.ajax({
+            url:ws_url,
+            type:'POST',
+            data:{m:302,vx:userWS, vy:pdwWS, ui:vDatosUsuario.user, forms:vFormData[0]},        
+            dataType:'text',
+            success: function(data){
+                //console.log(data);
+                var vflag = data.split('/');
+                if(vflag[0] == 'SUCCESS'){
+                    vQuery = 'INSERT INTO tbl_forms_filled (id_form, dtos, date, status, lat, lng) ';
+                    vQuery += 'VALUES(\'' +  vFormData[0].id_form + '\',\'' + (vFormData[0].vdata).toString() + '\',' + vFormData[0].fech + ',1,';
+                    vQuery += vFormData[0].lat + ','+ vFormData[0].lng  +')';
+                    ejecutaSQL(vQuery, 0);        
+
                     $.mobile.loading( 'show', {
-                        text: '',
+                        text: 'Formulario enviado correctamente.',
                         textVisible: true,
                         textonly:true,
                         theme: 'a',
-                        html: '<span><center><img src="img/noconection.png" width="60px" /></center><br />Servidor no responde.<br />Guardando Localmente</span>'
+                        html: ''
                     });
-                    vQuery = 'INSERT INTO tbl_forms_filled (id_form, dtos, date, status, lat, lng) ';
-                    vQuery += 'VALUES(\'' +  tempForm[0].id_form + '\',\'' + (tempForm[0].vdata).toString() + '\',' + tempForm[0].fech + ',0,';
-                    vQuery += tempForm[0].lat + ','+ tempForm[0].lng  +')';
-                    ejecutaSQL(vQuery, 0);
-
-                    setTimeout(function(){  
-                        $.mobile.loading('hide'); 
-                        backButton();
-                    }, 2000);
+                    setTimeout(function(){  $.mobile.loading('hide'); backButton(); }, 1200);
+                }else{
+                    $.mobile.loading( 'show', {
+                        text: 'Error al intentar salvar formulario.',
+                        textVisible: true,
+                        textonly:true,
+                        theme: 'a',
+                        html: ''
+                    });
+                    setTimeout(function(){  $.mobile.loading('hide'); backButton(); }, 1200);
                 }
-            });  
-    }, 4000);    
+                
 
+            }, 
+            error: function(error){
+                $.mobile.loading( 'show', {
+                    text: '',
+                    textVisible: true,
+                    textonly:true,
+                    theme: 'a',
+                    html: '<span><center><img src="img/noconection.png" width="60px" /></center><br />Servidor no responde.<br />Guardando Localmente</span>'
+                });
+                vQuery = 'INSERT INTO tbl_forms_filled (id_form, dtos, date, status, lat, lng) ';
+                vQuery += 'VALUES(\'' +  vFormData[0].id_form + '\',\'' + (vFormData[0].vdata).toString() + '\',' + vFormData[0].fech + ',0,';
+                vQuery += vFormData[0].lat + ','+ vFormData[0].lng  +')';
+                ejecutaSQL(vQuery, 0);
+
+                setTimeout(function(){  
+                    $.mobile.loading('hide'); 
+                    backButton();
+                }, 2000);
+            }
+        });  
+    //}, 4000);       
+}
+
+function guardarForm(){
+
+    $.mobile.loading( 'show', {
+        text: '',
+        textVisible: true,
+        textonly:true,
+        theme: 'a',
+        html: '<span>Guardando Localmente</span>'
+    });
+
+    try{
     
+    vQuery = 'INSERT INTO tbl_forms_filled (id_form, dtos, date, status, lat, lng) ';
+    vQuery += 'VALUES(\'' +  vFormData[0].id_form + '\',\'' + (vFormData[0].vdata).toString() + '\',' + vFormData[0].fech + ',0,';
+    vQuery += vFormData[0].lat + ','+ vFormData[0].lng  +')';
+    ejecutaSQL(vQuery, 0);
+
+    $.mobile.loading( 'show', {
+        text: 'Guardado Exitosamente',
+        textVisible: true,
+        textonly:true,
+        theme: 'a',
+        html: ''
+    });
+
+      
+    }catch(e){
+        console.log(e);
+        $.mobile.loading( 'show', {
+        text: 'No se pudo guardar el formulario',
+        textVisible: true,
+        textonly:true,
+        theme: 'a',
+        html: ''
+    });        
+    } 
+    setTimeout(function(){  
+        $.mobile.loading('hide'); 
+        backButton();
+    }, 2000); 
+}
+
+
+function prevForm(vIdForm, vFlag){
+    //console.log(vIdForm);
+    pgActual = 101;
+    var StrHtml = '';
+    var arrItems = [];
+    try{
+        if(vFlag == 0){
+            db.transaction(function(cmd){   
+                cmd.executeSql('SELECT * FROM tbl_forms_filled where id_form =?', [vIdForm], function (cmd, results) {
+                    var len = results.rows.length;
+                    if(len>0){
+                        //console.log(results.rows[0].id_form);
+                        StrHtml += '<p><b>Id Formulario:</b> <br />'+ results.rows[0].id_form +'</p>';
+                        StrHtml += '<p><b>Fecha:</b> <br />'+ results.rows[0].date +'</p>';
+                        if(parseInt(results.rows[0].status) == 1){
+                            StrHtml += '<p><b>Estado:</b> <br />Enviado</p>';
+                        }else{                    
+                            StrHtml += '<p><b>Estado:</b> <br />Pendiente</p>';
+                        }
+                        StrHtml += '<p><b>Lat/Lng:</b> <br />'+ results.rows[0].lat +' / '+ results.rows[0].lng +'</p>';
+                        StrHtml += '<hr />';
+                        arrItems = eval(results.rows[0].dtos);
+                        //console.log(arrItems);
+                        for(i=0; i<arrItems.length; i++){
+                            StrHtml += '<p><b>'+arrItems[i].q +'</b> <br />&nbsp;&nbsp;'+ arrItems[i].r +'</p>';
+                        }
+                        StrHtml += '<hr /><br />';
+
+                        $("#formRPT_Det").html(StrHtml);
+                        $("#formsRPT").show();
+                        $("#forms_list").hide();
+                        $("#forms_pendientes").hide();
+                        $("#forms_enviados").hide();
+                        $.mobile.loading('hide');
+                    }
+                });
+            });
+        }
+        else{
+            StrHtml += '<p><b>Id Formulario:</b> <br />'+ vFormData[0].id_form +'</p>';
+            StrHtml += '<p><b>Fecha:</b> <br />'+ vFormData[0].fech +'</p>';                  
+            StrHtml += '<p><b>Estado:</b> <br />Pendiente</p>';
+            StrHtml += '<p><b>Lat/Lng:</b> <br />'+ vFormData[0].lat +' / '+ vFormData[0].lng +'</p>';
+            StrHtml += '<hr />';
+            arrItems = eval(vFormData[0].vdata);
+            //console.log(arrItems);
+            for(i=0; i<arrItems.length; i++){
+                StrHtml += '<p><b>'+arrItems[i].q +'</b> <br />&nbsp;&nbsp;'+ arrItems[i].r +'</p>';
+            }
+            StrHtml += '<hr /><table width="100%"><tr><td width="50%"><button id=\'sendForm\' onclick="envioForm()" data-theme="b">Enviar</button></td>';
+            StrHtml += '<td><button id=\'saveForm\' onclick="guardarForm()" data-theme="a">Guardar</button></td></tr></table><br />';
+
+            $("#formRPT_Det").html(StrHtml);
+
+            $("#formRPT_Det").trigger('create');
+            $("#formsRPT").show();
+            $("#pagDMS_forms").show();
+            $("#forms_list").hide();
+            $("#forms_pendientes").hide();
+            $("#forms_enviados").hide();  
+            $("#dv_forms_template").hide();
+            $.mobile.loading('hide');
+            
+        }
+    }catch(e){
+        console.log(e);
+    }
 }
