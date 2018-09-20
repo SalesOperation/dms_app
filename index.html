@@ -38,8 +38,8 @@
 <div data-role="page" data-theme="a" id="page"  hidden>
 
     <div data-role="header" id="dvHead" data-position="fixed" style="position:fixed; border:none; padding-left:7px; padding-top:15px; background-color:#0B0B61; color:#FFF; height:35px">
-        
-        <div style="float:right; margin-right:20px; margin-top:-5px; cursor:pointer" onclick="backButton()"><img src="img/backicon.png" width="20px"/></div>
+        <div style="float:left; margin-left:-2px; margin-right:10px; margin-top:-5px; cursor:pointer"><a href="#dvMenu" onclick="resize_img()"><img src="img/menu_icon2.png" width="35px"/></a></div>
+        <div style="float:right; margin-right:20px; margin-top:-3px; cursor:pointer" onclick="backButton()"><img src="img/backicon.png" width="17px"/></div>
         <label id="lbl_title">DOCUMENTOS DMS</label>
         <!--<div class="ui-grid-a" id="subHead">
             <a href="#dvMenu" id="btnM" class="ui-btn ui-icon-bars ui-btn-icon-notext ui-nodisc-icon" style="border:none; margin-right:6px; margin-left:6px; display:none"></a>
@@ -50,9 +50,9 @@
     <div role="main" id='dvContentG' class="ui-content" style="padding:0px; background-color: #F2F2F2;">
         <!-- Dv Main -->
         <div id="dvMain" style="margin:15px"> 
-            <div id="float_btn" class="hamburger"  >
+            <!--<div id="float_btn" class="hamburger"  >
                 <a href="#dvMenu" onclick="resize_img()"><img src="img/menu_icon.png" width="100%" /></a>
-            </div>           
+            </div>           -->
         
             <div id="dvDMS">
                 <div class="ui-body ui-body-a">
@@ -68,9 +68,12 @@
                 </div>
                 <br />
                 <div class="ui-body ui-body-a">
+
                     <h3>Información de Usuario</h3>
                     <label style="display:block" id="id_dms_user">-</label> 
                     <label style="display:block; color:#848484; font-size:0.8em; margin-bottom:10px; margin-top:-3px">Id DMS</label>
+                    <label style="display:block" id="num_tel">-</label> 
+                    <label style="display:block; color:#848484; font-size:0.8em; margin-bottom:10px; margin-top:-3px">Num Telefono</label>
                     <label style="display:block" id="name_user">-</label> 
                     <label style="display:block; color:#848484; font-size:0.8em; margin-bottom:10px; margin-top:-3px">Nombre</label> 
                     <label style="display:block" id="job_user">-</label> 
@@ -87,6 +90,15 @@
                 <div id="mapHorus" style="width:100%; height:150px; margin-bottom:15px"></div>
                 <button id="startGPS" onclick="tracking()">Enviar GPS</button>
                 <button id="stopGPS" onclick="tracking()" data-theme="b">Detener GPS</button>
+
+                <div id="kmts"class="ui-body ui-body-a">
+                    <h3> Recorrido </h3>
+                    <center>
+                    <div id="kmts_num"><h2>0.00 Kmts</h2>
+                    </div>
+                    </center>
+                </div>   
+
             </div><!-- Pagina 1 -->
 
             <!-- Pagina DMS Forms -->
@@ -397,12 +409,9 @@ function resizer(){
     $("#bg_login").css('min-height', $(window).height());
     $("#dvContentG").css('min-height', $(window).height()-45);
 
-    $("#float_btn").css({'margin-top':vH-110, 'margin-left': vW - 100});
+    //$("#float_btn").css({'margin-top':vH-110, 'margin-left': vW - 100});
     $("#mapHorus").css('min-height', vW*0.6);
     $("#dvMenu").css({'height': $(window).height(), "overflow":'scroll'});
-}  
-
-
+}      
 </script>
-
 </html>

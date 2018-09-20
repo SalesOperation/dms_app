@@ -7,8 +7,9 @@ db.transaction(function(cmd){
     cmd.executeSql('CREATE TABLE IF NOT EXISTS users (id unique, pwd, name, phone, email, job_title, status, login, type, id_dms, license)');
     cmd.executeSql('CREATE TABLE IF NOT EXISTS params (id unique, dvalue)');
     cmd.executeSql('CREATE TABLE IF NOT EXISTS records (fecha, lat, lng, user)');    
-    cmd.executeSql('CREATE TABLE IF NOT EXISTS tbl_forms (id unique, desc, type, version, dtos, udt_dt)');      
-    cmd.executeSql('CREATE TABLE IF NOT EXISTS tbl_forms_filled (id_form, dtos, date, status, lat, lng)');    
+    cmd.executeSql('CREATE TABLE IF NOT EXISTS tbl_forms (id unique, desc, type, version, dtos, scripts, udt_dt)');      
+    cmd.executeSql('CREATE TABLE IF NOT EXISTS tbl_forms_filled (id_form, dtos, date, status, lat, lng)'); 
+    cmd.executeSql('CREATE TABLE IF NOT EXISTS tbl_files (id_file, correl, name, type, strdtos)');    
     //cmd.executeSql('CREATE TABLE IF NOT EXISTS tbl_trays (tray, id_form, fech, status)');     
     //cmd.executeSql('CREATE TABLE IF NOT EXISTS tbl_dms (id_pdv, nombre_pdv, id_circuito)');
 

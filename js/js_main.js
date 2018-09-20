@@ -11,7 +11,7 @@ var vLng = 0;
 var ws_url = 'https://190.4.63.207/ws_so/service_so.php';
 
 var vDatosUsuario ={"user":"", "login":"", "name":"", "phone":0, "email":"na", "job":"na", "id_dms":0};
-var vTitle ="Tracking Service Comercial Support";
+var vTitle ="DMS Experience";
 var map;
 var pgActual = 0;
 var pgBack = 0;
@@ -23,6 +23,8 @@ var vInteDash;
 var bgGeo;
 var vFormData = {};
 var vFormsPendientes = [];
+var vFileG;  //Variable para foto del usuario
+
 //var webSvrListener =  setInterval(function(){ consultSVR()}, 59000);
 var pagRoot = [{id:0, back:0},
                 {id:1, back:0},
@@ -94,7 +96,10 @@ var app = {
 
 $(document).ready(function(e){
     setTimeout(function(){getMap(14.618086,-86.959082); }, 2000);
-    hide_pags();    
+    hide_pags();   
+    var img = new Image();
+    //img.src = 'img/salesman.png';
+    //saveImgtoDB(img); 
 
     $("#dvDMS").show();
     $('#lbl_title').html('DMS EXPERIENCE');            
@@ -176,6 +181,28 @@ $(document).ready(function(e){
                         $("#dvMain").show();
                         $("#bg_login").hide();
                         $("#dvUserName").html(vDatosUsuario.user);
+                        setTimeout(function(){
+                            var strUrl = '';
+                            var arrFile = [];
+                            db.transaction(function(cmd2){
+                                cmd2.executeSql("SELECT * FROM tbl_files where id_file = ? order by correl asc", [vDatosUsuario.user], function (cmd2, results) {
+                                    var len = results.rows.length;
+                                    for(i=0;i<len; i++){
+                                        strUrl += results.rows.item(i).strdtos;
+                                        arrFile.push({id_file:results.rows.item(i).id_file, nombre:results.rows.item(i).name, tipo:results.rows.item(i).type, corel:results.rows.item(i).correl, dtos:results.rows.item(i).strdtos});
+                                    }
+                                    //console.log(strUrl);
+                                    //console.log('Img Loaded');
+                                    //sendFileToServer(arrFile);
+                                    if(strUrl.length<=10){
+                                        getFileToServer(vDatosUsuario.user);
+                                    }else{
+                                        displayImage(strUrl);
+                                    }
+                                });
+                            });
+                        }, 500);
+
                     }else{
                         window.location.replace('login.html'); 
                     }
@@ -192,6 +219,29 @@ $(document).ready(function(e){
             logInOut(tempLogin.user, 1); 	            
             $("#dvUserName").html(vDatosUsuario.user);
             //sleep(400);
+            setTimeout(function(){
+                var strUrl = '';
+                var arrFile = [];                
+
+                db.transaction(function(cmd2){
+                    cmd2.executeSql("SELECT * FROM tbl_files where id_file = ? order by correl asc", [vDatosUsuario.user], function (cmd2, results) {
+                        var len = results.rows.length;
+
+                        for(i=0;i<len; i++){
+                            strUrl += results.rows.item(i).strdtos;
+                            arrFile.push({id_file:results.rows.item(i).id_file, nombre:results.rows.item(i).name, tipo:results.rows.item(i).type, corel:results.rows.item(i).correl, dtos:results.rows.item(i).strdtos});          
+                        }
+                        //console.log(strUrl);                        
+                        //console.log('Img Loaded');
+                        //sendFileToServer(arrFile);                        
+                        if(strUrl.length<=10){
+                            getFileToServer(vDatosUsuario.user);
+                        }else{
+                            displayImage(strUrl);
+                        }
+                    });
+                });
+            }, 500);
         }
     }
     setTimeout( function(){ validaLogin();}, 100); 
@@ -232,9 +282,11 @@ function show_datos_user(vUser){
                 vDatosUsuario.email = results.rows.item(0).email;
                 vDatosUsuario.job = results.rows.item(0).job_title;
                 vDatosUsuario.id_dms = results.rows.item(0).id_dms;
+                vDatosUsuario.phone = results.rows.item(0).phone;
 
 
                 $("#id_dms_user").html(vDatosUsuario.id_dms);
+                $("#num_tel").html(vDatosUsuario.phone);
                 $("#uid_user").html(vDatosUsuario.user.toLowerCase());
                 $("#name_user").html(vDatosUsuario.name);
                 $("#email_user").html(vDatosUsuario.email);
@@ -393,8 +445,10 @@ function takePicture(){
     navigator.camera.getPicture(onSuccess, onFail, { quality: 50, sourceType:Camera.PictureSourceType.CAMERA, correctOrientation:true,
             cameraDirection: Camera.Direction.FRONT, allowEdit: true});
 
-    function onSuccess(imageURI) {
-        displayImage(imageURI)
+    function onSuccess(imageURI) {        
+        var img = new Image();
+        img.src = imageURI;
+        saveImgtoDB(img);
     }
 
     function onFail(message) {
@@ -406,6 +460,69 @@ function displayImage(imgUri) {
     $("#imgUser").attr('src', imgUri);
 }
 
+
+function saveImgtoDB(imgFile){
+    var cant_rows = 0;
+    var arrImg = [];
+    var strUrl = '';
+    var arrStrUrl = [];
+    var arrFile = [];
+    img = imgFile;
+
+    setTimeout(function(){   
+                imgW = img.width;
+                imgH = img.height;
+                ratio = (imgH/imgW).toFixed(2);
+
+                var wid = 640;
+                var hei = wid*ratio;            
+
+                var canvas = document.createElement('canvas');
+                var ctx = canvas.getContext('2d');
+                canvas.width=wid;
+                canvas.height=hei;
+                ctx.drawImage(img, 0, 0, wid, hei);
+                var dataurl = canvas.toDataURL("image/jpeg");
+                cant = (dataurl.length/4000).toFixed(2);
+                //console.log(cant);
+                arr_decimal = cant.split('.');
+                if(parseInt(arr_decimal[1])>0){
+                    cant_rows = parseInt(arr_decimal[0]) + 1;
+                }else{
+                    cant_rows = parseInt(arr_decimal[0]);
+                }
+                //console.log(cant_rows);
+
+                for(i=1; i<=cant_rows; i++){
+                    //console.log('From:' + (i-1)*4000 + ' To:'+ ((i*4000)-1));
+                    //console.log(i +','+ vFile.name + ',' + dataurl.substring((i-1)*4000, ((i*4000)-1)));
+                    arrImg.push(dataurl.substring((i-1)*4000, (i*4000)));
+                }
+                //console.log(arrImg);
+                for(j=0;j<arrImg.length; j++){
+                    strUrl += arrImg[j].replace('"', '');
+                    arrStrUrl.push({user:vDatosUsuario.user, num:j, name:'imgUser', type:'jpeg', dtos:arrImg[j].replace('"', '')});
+                    arrFile.push({id_file:vDatosUsuario.user, nombre:'imgUser', tipo:'jpeg', corel:j, dtos:arrImg[j].replace('"', '')});                              
+                }
+
+                //console.log(strUrl.length +'-'+ dataurl.length);
+                //console.log(strUrl);
+                ejecutaSQL('DELETE FROM tbl_files where id_file=\'' + arrStrUrl[0].user + '\'', 0)
+                setTimeout(function(){
+                    for(i=0;i<arrStrUrl.length; i++){
+                        vQry = 'INSERT INTO tbl_files (id_file, correl, name, type, strdtos) VALUES(';
+                        vQry += '\'' + arrStrUrl[i].user + '\',' + arrStrUrl[i].num + ',\''  + arrStrUrl[i].name + '\',\'' + arrStrUrl[i].type + '\',\'' + arrStrUrl[i].dtos + '\')';                
+                        //console.log(vQry);
+                        ejecutaSQL(vQry, 0); 
+                    }
+                    sendFileToServer(arrFile);
+
+                }, 1000);
+
+                displayImage(strUrl);
+            }, 500);     
+    
+}
 
 function backButton(){
 
@@ -938,7 +1055,7 @@ function getBase64(file) {
 function resize_img(){
 
     setTimeout(function(){ 
-        wuser = $("#imgUser").width(); 
+        wuser = $("#imgUser").width()*1.02; 
         //console.log('Resizin img - ' + wuser);
         $("#imgUser").css('height', 
         wuser); }, 
@@ -958,7 +1075,7 @@ function desplegarForm(vIdForm, callback){
             for(i=0; i<len; i++){
                vItems = JSON.parse(results.rows.item(i).dtos);
                //console.log(vItems);
-               drawForm(vItems, vIdForm);
+               drawForm(vItems, vIdForm, results.rows.item(i).scripts);
                vFormData = {id_form:vIdForm + '_' + getYMD(0) + getHMS(), vdata:vItems};
                //console.log(vFormData);
             }   
@@ -984,28 +1101,32 @@ function desplegarForm(vIdForm, callback){
 
 }
 
-function drawForm(vItems, vtittle){
+function drawForm(vItems, vtittle, vScript){
     //console.log(vItems);
-    vStrFrom = '';
-    vStrFrom += '<div class="custom-corners"><div class="ui-bar ui-bar-a"><h3>'+ vtittle +'</h3></div>';
-    vStrFrom += '<div class="ui-body ui-body-a">';
+    vStrForm = '';
+    vStrForm += '<div class="custom-corners"><div class="ui-bar ui-bar-a"><h3>'+ vtittle +'</h3></div>';
+    vStrForm += '<div class="ui-body ui-body-a">';
     var temp = [];
     for (j=0; j<vItems.length; j++){
-        //console.log(vStrFrom);
+        //console.log(vStrForm);
         temp.push(drawObject(parseInt(vItems[j].tipo), vItems[j].id, vItems[j].name, eval(vItems[j].ops), vItems[j].func));
-        vStrFrom += temp[j];
+        vStrForm += temp[j];
     }
     
-    vStrFrom +=  drawObject(201, 'btn1', 'Continuar', [], 'continuarForms()');
-    /*vStrFrom += '<script type="text/javascript">';
-    vStrFrom += 'function show(){ alert(\'hello \' + $("#txt1").val() + \'-\'+ $("#txt8").val());  } ';
-    vStrFrom += 'function chngOp1(){ if($("#op1").val()=="1001"){ $("#txt8").parent().hide(); $(\'label[for="txt8"]\').hide();}else{ $("#txt8").parent().show(); $(\'label[for="txt8"]\').show(); } }'; 
-    vStrFrom += '</script>';*/
-    vStrFrom += "</div></div>";
+    vStrForm +=  drawObject(201, 'btn1', 'Continuar', [], 'null');
+    vStrForm += '<script type="text/javascript">';
+    vStrForm += vScript; //'setTimeout(function(){ $("#Q3").parent().hide();  $(\'label[for="Q3"]\').hide();}, 500);';
+    //vStrForm += '$("#btn1").on("click", function(){ alert("0"); setTimeout(function(){continuarForms();},500)});';
+    /*vStrForm += 'function show(){ alert(\'hello \' + $("#txt1").val() + \'-\'+ $("#txt8").val());  } ';
+    vStrForm += 'function chngOp1(){ if($("#op1").val()=="1001"){ $("#txt8").parent().hide(); $(\'label[for="txt8"]\').hide();}else{ $("#txt8").parent().show(); $(\'label[for="txt8"]\').show(); } }'; 
+    */
+    vStrForm += '</script>';
+    vStrForm += "</div></div>";
+    //console.log(vStrForm)
     
     switchMenu(3, 100);
 
-    $('#dv_forms_template_content').html(vStrFrom);
+    $('#dv_forms_template_content').html(vStrForm);
     $('#dv_forms_template_content').trigger('create');
 }
 
@@ -1017,35 +1138,38 @@ function drawObject(vTipo, vId, vNombre, vOptions, vfunc){
     switch(vTipo)
     {
         case 101:
-            vStr += '<label for="'+ vId +'">'+ vNombre +'</label><input type="text" id="'+ vId +'" /><br />';
+            vStr += '<div id="dv'+ vId +'" style="margin-bottom="18px"><label for="'+ vId +'">'+ vNombre +'</label><input type="text" id="'+ vId +'" /></div>';
         break;
         case 111:
-            vStr += '<label for="'+ vId +'">'+ vNombre +'</label><input type="number" id="'+ vId +'" /><br />';
-        break;
+            vStr += '<div id="dv'+ vId +'" style="margin-bottom:18px"><label for="'+ vId +'">'+ vNombre +'</label><input type="number" id="'+ vId +'" /></div>';
+        break; 
+        case 112:
+            vStr += '<input type="hidden" id="'+ vId +'" />';
+        break;     
         case 102:
-            vStr += '<label for="'+ vId +'">'+ vNombre +'</label><textarea id="'+ vId +'"></textarea><br />';
+            vStr += '<div id="dv'+ vId +'" style="margin-bottom:18px"><label for="'+ vId +'">'+ vNombre +'</label><textarea id="'+ vId +'"></textarea></div>';
         break;
         case 103:
-            vStr += '<label for="'+ vId +'">'+ vNombre +'</label>';
+            vStr += '<div id="dv'+ vId +'" style="margin-bottom:18px"><label for="'+ vId +'">'+ vNombre +'</label>';
             vStr += '<select id="'+ vId +'" onchange="'+ vfunc +'">';
             for(i=0; i<vOptions.length; i++){
-                vStr += '<option value="'+ vOptions[i]+'">'+ vOptions[i] +'</option>';
+                vStr += '<option value="'+ vOptions[i] +'">'+ vOptions[i] +'</option>';
             }
-            vStr += '</select><br />';
+            vStr += '</select></div>';
         break;
         case 104:
-            vStr += '<fieldset data-role="controlgroup"><legend>'+ vNombre +'</legend>';
+            vStr += '<fieldset data-role="controlgroup" id="dv'+ vId +'" style="margin-bottom:18px"><legend>'+ vNombre +'</legend>';
             for(i=0; i<vOptions.length; i++){
-                vStr += '<input type="radio" name="'+ vId + '" id="'+ vOptions[i].id +'" value="'+ vOptions[i].id +'">';
-                vStr += '<label for="'+ vOptions[i].id +'">'+ vOptions[i].name +'</label>';
+                vStr += '<input type="radio" name="'+ vId + '" id="'+ vOptions[i] +'" value="'+ vOptions[i] +'">';
+                vStr += '<label for="'+ vOptions[i] +'">'+ vOptions[i] +'</label>';
             }
             vStr += '</fieldset><br />';
         break;
         case 105:
-            vStr += '<fieldset data-role="controlgroup"><legend>'+ vNombre +'</legend>';
+            vStr += '<fieldset data-role="controlgroup" id="dv'+ vId +'" style="margin-bottom:18px"><legend>'+ vNombre +'</legend>';
             for(i=0; i<vOptions.length; i++){
-                vStr += '<input type="checkbox" name="'+ vOptions[i].id + '" id="'+ vOptions[i].id +'">';
-                vStr += '<label for="'+ vOptions[i].id +'">'+ vOptions[i].name +'</label>';
+                vStr += '<input type="checkbox" name="'+ vId + '" id="'+ vOptions[i] +'" value="'+ vOptions[i] +'">';
+                vStr += '<label for="'+ vOptions[i] +'">'+ vOptions[i] +'</label>';
             }
             vStr += '</fieldset><br />';
         break;
@@ -1074,26 +1198,14 @@ function updateForms(){
         },
         success: function(data){
             //console.log(data);
-            //console.log(JSON.stringify(data[1].data));
             vQry = '';
-
-            // Borra Forms a actualizar
-            /*for(i=0;i<data.length; i++){
-
-                vQry = 'DELETE FROM tbl_forms';
-                vQry += ' WHERE id = \'' + data[i].id + '\'';
-
-                ejecutaSQL(vQry, 0); 
-            }*/
             vQry = 'DELETE FROM tbl_forms';
             ejecutaSQL(vQry, 0); 
 
-
             for(i=0;i<data.length; i++){
-
-                vQry = 'INSERT INTO tbl_forms (id, desc, type, version, dtos, udt_dt) VALUES(';
-                vQry += '\'' + data[i].id + '\',\'' + data[i].desc + '\','  + data[i].tipo + ',' + data[i].ver + ',\'' + JSON.stringify(data[i].data) +'\',\'' + data[i].udt_dt + '\')';
-
+                vQry = 'INSERT INTO tbl_forms (id, desc, type, version, dtos, scripts, udt_dt) VALUES(';
+                vQry += '\'' + data[i].id + '\',\'' + data[i].desc + '\','  + data[i].tipo + ',' + data[i].ver + ',\'' + JSON.stringify(data[i].data) + '\',\''+ data[i].vscript +'\',\'' + data[i].udt_dt + '\')';                
+                //console.log(vQry);
                 ejecutaSQL(vQry, 0); 
             }
         }, 
@@ -1256,8 +1368,9 @@ function envioFormsPend(){
     }   
 }
 
-function continuarForms(){
-    var tempForm = [];
+function continuarForms()
+
+{    var tempForm = [];
     var temArr = [];
     tempForm.push({id_form:'', vdata:[], fech:'', lat:0, lng:0});
     tempForm[0].id_form = vFormData.id_form;
@@ -1271,10 +1384,43 @@ function continuarForms(){
 
     try{
     setTimeout(function(){
+        var vItem;
+        var x1;
+
         for(i=0; i<vFormData.vdata.length; i++){
-            //console.log(vFormData.vdata[i].id);
-            x1 = document.getElementById(vFormData.vdata[i].id).value;
+            //console.log(vFormData.vdata);
+            switch(parseInt(vFormData.vdata[i].tipo)){
+                case 104:
+                    vItem = document.getElementsByName(vFormData.vdata[i].id);
+                    //console.log(vItem);
+                    for(j=0; j<vItem.length; j++){
+                        console.log(vItem[j]);
+                        if(vItem[j].checked == true){
+                            x1 = vItem[j].value;
+                        }
+                    }
+                break;
+                case 105:
+                    var contT = 0;
+                    vItem = document.getElementsByName(vFormData.vdata[i].id);
+                    //console.log(vItem);
+                    for(j=0; j<vItem.length; j++){
+                        console.log(vItem[j]);
+                        if(vItem[j].checked == true){
+                            if(contT==0){                                     
+                                x1 = vItem[j].value;
+                                contT = 1;
+                            }else{     
+                                x1 += ';' + vItem[j].value;
+                            }                      
+                        }
+                    }
+                break;
+                default:
+                    x1 = document.getElementById(vFormData.vdata[i].id).value;        
+            }
             temArr.push({q:vFormData.vdata[i].name, r:x1});
+            
         }
 
         tempForm[0].vdata = JSON.stringify(temArr);
@@ -1462,4 +1608,87 @@ function prevForm(vIdForm, vFlag){
     }catch(e){
         console.log(e);
     }
+}
+
+
+function validaCampo(vDato, vTipo){
+    var result;
+
+    switch(vTipo){
+        //Numerico
+        case 0:
+            if (/^\s*$/.test(vDato)){
+                result = 0;
+            }else{
+                if(/[0-9]/.test(vDato)){
+                    result = vDato;
+                }else{
+                    result = 0;
+                }
+            }
+        break;
+        //Alfanumerico
+        case 1:
+            if (/^\s*$/.test(vDato)){
+                result ='-';
+            }else{
+                result = vDato;                
+            }
+        break;
+        default:
+            result = 0;
+        break;
+    }
+    return result;
+}
+
+
+function sendFileToServer(vArrFile){
+    $.ajax({
+        url:ws_url,
+        type:'POST',
+        data:{m:303,vx:userWS, vy:pdwWS, arrFile:vArrFile},        
+        dataType:'text',
+        success: function(data){
+            console.log(data);
+        }, 
+        error: function(error){
+            console.log(error);
+        }
+    });  
+}
+
+function getFileToServer(vFileId){
+
+    var result;
+    var strImg = '';
+    $.ajax({
+        url:ws_url,
+        type:'POST',
+        data:{m:304,vx:userWS, vy:pdwWS, idFile:vFileId},        
+        dataType:'text',
+        success: function(data){
+            result = eval(data);
+            //console.log(result);
+            ejecutaSQL('DELETE FROM tbl_files where id_file=\'' + result[0].id_file + '\'', 0)
+            setTimeout(function(){
+                for(i=0;i<result.length; i++){
+                    strImg += result[i].dtos;
+                    vQry = 'INSERT INTO tbl_files (id_file, correl, name, type, strdtos) VALUES(';
+                    vQry += '\'' + result[i].id_file + '\',' + result[i].corel + ',\''  + result[i].name + '\',\'' + result[i].tipo + '\',\'' + result[i].dtos + '\')';                
+                    //console.log(vQry);
+                    ejecutaSQL(vQry, 0); 
+                }
+                //console.log('Img Saved Done');
+                if(strImg.length>=10){
+                    displayImage(strImg);                    
+                }else{
+                    displayImage('img/salesman.png');
+                }
+            }, 1000);
+        }, 
+        error: function(error){
+            console.log(error);
+        }
+    });  
 }
