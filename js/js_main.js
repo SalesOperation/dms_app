@@ -95,6 +95,11 @@ var app = {
 }
 
 $(document).ready(function(e){
+    Highcharts.setOptions({
+      credits: {
+        enabled: false
+      }
+    }); 
     setTimeout(function(){getMap(14.618086,-86.959082); }, 2000);
     hide_pags();   
     var img = new Image();
@@ -271,6 +276,16 @@ $(document).ready(function(e){
 
 });
 
+function changYMVtas(e){
+    $.mobile.loading('show'); 
+    reporteVentas(e.value);
+}
+
+function chngFechaCierreVtas(ev){    
+    $.mobile.loading('show'); 
+    vFech = ev.value.replace('-', '').replace('-', '');
+    cierresDiarios(vFech);
+}
 
 function show_datos_user(vUser){
     db.transaction(function(cmd2){
@@ -384,13 +399,18 @@ function hide_pags(){
     $("#pag3").hide();
     $("#pag2").hide();
     $("#dvDMS").hide();
-    $("#dvHead").hide();
+    //$("#dvHead").hide();
     $('#dv_forms_template').hide();
     $("#formsRPT").hide();
+    $("#dvReporteVentas").hide();
 
     //Forms DMS    
     $("#forms_enviados").hide();
     $("#forms_pendientes").hide();
+
+    //Reportes Ventas
+    $("#sbRtpGlobal").hide();
+    $("#sbCierreD").hide();
 }
 
 
@@ -580,6 +600,14 @@ function switchMenu(vIdFrom, vIdTo){
             $("#fechIniForm").val(vfechini.substr(0,4) + '-' + vfechini.substr(4,2) + '-' + vfechini.substr(6,2));
             $("#fechFinForm").val(vfechfin.substr(0,4) + '-' + vfechfin.substr(4,2) + '-' + vfechfin.substr(6,2));
 
+        break;
+        case 4:
+            hide_pags();
+            $("#dvReporteVentas").show();
+            $("#sbRtpGlobal").show();
+            reporteVentas(0);
+            $("#anomesRVtas").val(parseInt(getYMD(0).substr(0,6)));
+            $("#anomesRVtas").selectmenu('refresh');
         break;
         case 100:
             hide_pags();
@@ -1691,4 +1719,274 @@ function getFileToServer(vFileId){
             console.log(error);
         }
     });  
+}
+
+
+
+function reporteVentas(vaniomes){
+
+    var vSeries = [];
+    var vCats= [];
+    var vMetas = [];
+    var vEjecucion = [];
+    var vResult;
+    var query = '';
+    var temp1=0;
+
+    if(vaniomes==0){
+        vaniomes =  getYMD(0).substr(0,6);
+    }
+
+    $("#epin_eje").html(0);
+    $("#epin_met").html(0);
+    $("#epin_res").html(0);
+    $("#tmy_eje").html(0);
+    $("#tmy_met").html(0);
+    $("#tmy_res").html(0);
+    $("#tar_eje").html(0);
+    $("#tar_met").html(0);
+    $("#tar_res").html(0);
+    $("#tvs_eje").html(0);
+    $("#tvs_met").html(0);
+    $("#tvs_res").html(0);
+    $("#smt_eje").html(0);
+    $("#smt_met").html(0);
+    $("#smt_res").html(0);
+    $("#sim_eje").html(0);
+    $("#sim_met").html(0);
+    $("#sim_res").html(0);
+
+    //console.log(vaniomes);
+    db.transaction(function(cmd){   
+        cmd.executeSql('SELECT anomes, producto, unidad, sum(meta) as meta, sum(monto) as monto FROM tbl_ventas where id_dms=? and anomes=? group by anomes, producto, unidad', [parseInt(vDatosUsuario.id_dms), parseInt(vaniomes)], function (cmd, results) {
+            var len = results.rows.length;
+            if(len>0){
+                for(i=0; i<len; i++){
+                    //console.log(results.rows[0].producto);
+                    vCats.push(results.rows[i].producto);
+                    vMetas.push(parseInt(results.rows[i].meta));
+                    if(parseInt(results.rows[i].meta)>0){
+                        temp1 = (parseFloat(results.rows[i].monto)/parseFloat(results.rows[i].meta))*100;
+                    }else{
+                        temp1 = 100;
+                    }
+                    vEjecucion.push(parseInt(temp1.toFixed(0)));
+
+                    if(results.rows[i].producto.toUpperCase() == 'EPIN'){
+                        $("#epin_eje").html((results.rows[i].monto).toLocaleString('en'));
+                        $("#epin_met").html((results.rows[i].meta).toLocaleString('en'));
+                        $("#epin_res").html(temp1.toFixed(0));
+
+                    }else if(results.rows[i].producto.toUpperCase() == 'TIGO MONEY'){
+                        $("#tmy_eje").html((results.rows[i].monto).toLocaleString('en'));
+                        $("#tmy_met").html((results.rows[i].meta).toLocaleString('en'));
+                        $("#tmy_res").html(temp1.toFixed(0));
+                    }else if(results.rows[i].producto.toUpperCase() == 'TARJETA'){
+                        $("#tar_eje").html((results.rows[i].monto).toLocaleString('en'));
+                        $("#tar_met").html((results.rows[i].meta).toLocaleString('en'));
+                        $("#tar_res").html(temp1.toFixed(0));
+                    }else if(results.rows[i].producto.toUpperCase() == 'TARJETA_VAS'){
+                        $("#tvs_eje").html((results.rows[i].monto).toLocaleString('en'));
+                        $("#tvs_met").html((results.rows[i].meta).toLocaleString('en'));
+                        $("#tvs_res").html(temp1.toFixed(0));
+                    }else if(results.rows[i].producto.toUpperCase() == 'SMARTPHONES'){
+                        $("#smt_eje").html((results.rows[i].monto).toLocaleString('en'));
+                        $("#smt_met").html((results.rows[i].meta).toLocaleString('en'));
+                        $("#smt_res").html(temp1.toFixed(0));
+                    }else if(results.rows[i].producto.toUpperCase() == 'SIMCARDS'){
+                        $("#sim_eje").html((results.rows[i].monto).toLocaleString('en'));
+                        $("#sim_met").html((results.rows[i].meta).toLocaleString('en'));
+                        $("#sim_res").html(temp1.toFixed(0));
+                    }
+                }               
+            }
+
+            vSeries = [{name:'meta', data:vMetas}, {name:'ejecutado', data:vEjecucion}];
+            //console.log(vSeries);
+
+            $("#sbRtpGlobal").show();    
+            $("#sbCierreD").hide();
+
+            drawChart1('chart1', 'Resultado Mensual', '201809', '%', vSeries,  vCats);
+
+            setTimeout(function(){  
+                $.mobile.loading('hide'); 
+            }, 2000);
+        });
+    });
+}
+
+function cierresDiarios(vFecha){
+    var vSeries = [];
+    var vCats= [];
+    var vMetas = [];
+    var vEjecucion = [];
+    var vResult;
+    var query = '';
+    var temp1=0;
+    var tot_cierre = 0;
+
+    if(vFecha==0){
+        vaniomes = getYMD(0);
+        $("#fechRCierreD").val(vaniomes.substr(0,4)+'-'+vaniomes.substr(4,2)+'-'+vaniomes.substr(6,2));
+    }else{      
+        vaniomes=vFecha;
+    }
+    //console.log(vaniomes);
+    $("#epin2_eje").html(0);
+    $("#tmy2_eje").html(0);
+    $("#tar2_eje").html(0);
+    $("#tvs2_eje").html(0);
+    $("#smt2_eje").html(0);
+    $("#sim2_eje").html(0);
+
+    //console.log(vaniomes);
+    db.transaction(function(cmd){   
+        cmd.executeSql('SELECT particion, producto, unidad, sum(meta) as meta, sum(monto) as monto FROM tbl_ventas where id_dms=? and particion=? group by anomes, producto, unidad', [parseInt(vDatosUsuario.id_dms), parseInt(vaniomes)], function (cmd, results) {
+            var len = results.rows.length;
+            if(len>0){
+                for(i=0; i<len; i++){
+                    //console.log(results.rows[0].producto);
+                    vCats.push(results.rows[i].producto);
+                    vMetas.push(parseInt(results.rows[i].meta));
+                    if(parseInt(results.rows[i].meta)>0){
+                        temp1 = (parseFloat(results.rows[i].monto)/parseFloat(results.rows[i].meta))*100;
+                    }else{
+                        temp1 = 100;
+                    }
+                    vEjecucion.push(parseInt(temp1.toFixed(0)));
+
+                    if(results.rows[i].producto.toUpperCase() == 'EPIN'){
+                        tot_cierre += parseFloat(results.rows[i].monto);
+                        $("#epin2_eje").html((results.rows[i].monto).toLocaleString('en'));
+                    }else if(results.rows[i].producto.toUpperCase() == 'TIGO MONEY'){
+                        tot_cierre += parseFloat(results.rows[i].monto);
+                        $("#tmy2_eje").html((results.rows[i].monto).toLocaleString('en'));
+                    }else if(results.rows[i].producto.toUpperCase() == 'TARJETA'){
+                        tot_cierre += parseFloat(results.rows[i].monto);
+                        $("#tar2_eje").html((results.rows[i].monto).toLocaleString('en'));
+                    }else if(results.rows[i].producto.toUpperCase() == 'TARJETA_VAS'){
+                        tot_cierre += parseFloat(results.rows[i].monto);
+                        $("#tvs2_eje").html((results.rows[i].monto).toLocaleString('en'));
+                    }else if(results.rows[i].producto.toUpperCase() == 'SMARTPHONES'){
+                        $("#smt2_eje").html((results.rows[i].monto).toLocaleString('en'));
+                    }else if(results.rows[i].producto.toUpperCase() == 'SIMCARDS'){
+                        $("#sim2_eje").html((results.rows[i].monto).toLocaleString('en'));
+                    }
+                }               
+            }
+            $("#cierr_tot").html(tot_cierre.toLocaleString('en'));
+
+            vSeries = [{name:'ejecutado', data:vEjecucion}];
+            //console.log(vSeries);
+            drawChart1('dvChartVtas', 'Ejecución Diaria', vFecha, 'HNL', vSeries, vCats);
+            $("#sbRtpGlobal").hide();    
+            $("#sbCierreD").show();
+                   
+
+            setTimeout(function(){  
+                $.mobile.loading('hide'); 
+            }, 2000);
+        });
+    });
+}
+
+
+function reloadVentas(vaniomes, vFlag){
+    var vFech;
+    //console.log($("#anomesRVtas").val());
+    if(vaniomes==0){
+        vaniomes =  getYMD(0).substr(0,6);
+    }else{
+        if(vFlag==0){
+            vaniomes =  $("#anomesRVtas").val();
+        }else{            
+            vFech = $("#fechRCierreD").val().replace('-','').replace('-','');
+            vaniomes = vFech.substr(0,6) ;
+        }
+    }
+    if(vDatosUsuario.id_dms == 0){
+        alert('ID DMS no Establecido');
+    }else{
+        $.mobile.loading('show'); 
+        $.ajax({
+            url:ws_url,
+            type:'POST',
+            data:{m:305,vx:userWS, vy:pdwWS, id_dms:vDatosUsuario.id_dms, aniomes:vaniomes},        
+            dataType:'text',
+            success: function(data){
+                vResult = eval(data);
+                //console.log(vResult);
+                query = 'delete from tbl_ventas where anomes =' + vaniomes +' and id_dms=' + vDatosUsuario.id_dms;
+                if(vResult.length>0){
+                    ejecutaSQL(query, 0);                    
+                    setTimeout(function(){
+                        for(i=0; i<vResult.length; i++){
+                            query = 'insert into tbl_ventas(particion, anomes, id_dms, producto, unidad, meta, monto) values(';
+                            query += vResult[i].particion + ',';
+                            query += vResult[i].aniomes + ',';
+                            query += vResult[i].id_dms + ',\'';
+                            query += vResult[i].producto + '\',\'';
+                            query += vResult[i].unidad + '\',';
+                            query += vResult[i].meta + ',';
+                            query += vResult[i].monto + ')';
+                            //console.log(query);
+                            ejecutaSQL(query, 0);
+                        }
+                    setTimeout(function(){ if(vFlag==0) {reporteVentas(vaniomes)}else{cierresDiarios(vFech)};}, 3000);
+                    }, 1000);
+                }
+            }, 
+            error: function(error){
+                $.mobile.loading( 'show', {
+                    text: '',
+                    textVisible: true,
+                    textonly:true,
+                    theme: 'a',
+                    html: '<span><center><img src="img/noconection.png" width="60px" /></center><br />Servidor no responde.<br />Error de Coneccion</span>'
+                });
+            },
+            /*complete: function(e){
+                setTimeout(function(){  
+                    $.mobile.loading('hide'); 
+                }, 2000);
+            }*/
+        });  
+    }
+}
+
+function drawChart1(dvChart, vTitle, vStitle, vUnit, vSeries, vCats){
+
+    var str = '';
+    str += 'Highcharts.chart(dvChart, {';
+    str += '    chart: {';
+    str += '        polar: true,';
+    str += '        type: \'line\'';
+    str += '    },';
+    str += '    title: {';
+    str += '        text: vTitle,';
+    str += '        x: -80';
+    str += '    },';
+    str += '    pane: {';
+    str += '        size: \'75%\'';
+    str += '    },';
+    str += '    xAxis: {';
+    str += '        categories: vCats,';
+    str += '        tickmarkPlacement: \'on\',';
+    str += '        lineWidth: 0';
+    str += '    },';
+    str += '    yAxis: {';
+    str += '        gridLineInterpolation: \'polygon\',';
+    str += '        lineWidth: 0,';
+    str += '        min: 0';
+    str += '    },';
+    str += '    tooltip: {';
+    str += '        shared: true,';
+    str += '        pointFormat: \'<span style="color:{series.color}">{series.name}: <b>\' + vUnit + \' {point.y:,.0f}</b><br/>\'';
+    str += '    },';
+    str += '    series: vSeries';
+    str += '});';
+
+
+    eval(str);
 }
