@@ -56,7 +56,7 @@
             </div>           -->
         
             <div id="dvDMS">
-                <div class="ui-body ui-body-a">
+                <div class="ui-body ui-body-a" id="dvFormsDet">
                     <h3>Forms Estados</h3>
                     <div class="ui-grid-a" style="width:90%; margin-bottom:8px">
                         <div class="ui-block-a">Forms Enviados</div>
@@ -69,10 +69,10 @@
                 </div>
                 <br />
                 <div class="ui-body ui-body-a">
-
+                    <label style="float:right; margin-top:15px; font-size:0.8em; color:blue; cursor:pointer" onclick="getDatosUsuario()">Actualizar</label>
                     <h3>Información de Usuario</h3>
                     <label style="display:block" id="id_dms_user">-</label> 
-                    <label style="display:block; color:#848484; font-size:0.8em; margin-bottom:10px; margin-top:-3px">Id DMS</label>
+                    <label style="display:block; color:#848484; font-size:0.8em; margin-bottom:10px; margin-top:-3px">Cod DMS</label>
                     <label style="display:block" id="num_tel">-</label> 
                     <label style="display:block; color:#848484; font-size:0.8em; margin-bottom:10px; margin-top:-3px">Num Telefono</label>
                     <label style="display:block" id="name_user">-</label> 
@@ -82,13 +82,17 @@
                     <label style="display:block" id="uid_user">-</label> 
                     <label style="display:block; color:#848484; font-size:0.8em; margin-bottom:10px; margin-top:-3px">Usuario</label>                     
                     <label style="display:block" id="email_user">-</label> 
-                    <label style="display:block; color:#848484; font-size:0.8em; margin-bottom:10px; margin-top:-3px">Correo</label> 
+                    <label style="display:block; color:#848484; font-size:0.8em; margin-bottom:10px; margin-top:-3px">Correo</label>
+                    <label style="display:block" id="id_dms_dlr">-</label> 
+                    <label style="display:block; color:#848484; font-size:0.8em; margin-bottom:10px; margin-top:-3px">ID PDV/DLR</label>
 
-                </div>
+                </div><br />
+                <button class="ui-btn ui-corner-all ui-btn-a" onclick="cierreVtasDiaria(0,0)" id="btnCvta">Cerrar Venta Diaria</button>
+                
                 
             </div><!-- Pagina 1 -->
             <div id="dvHorus">
-                <div id="mapHorus" style="width:100%; height:150px; margin-bottom:15px"></div>
+                <!--<div id="mapHorus" style="width:100%; height:150px; margin-bottom:15px"></div>
                 <button id="startGPS" onclick="tracking()">Enviar GPS</button>
                 <button id="stopGPS" onclick="tracking()" data-theme="b">Detener GPS</button>
 
@@ -98,13 +102,25 @@
                     <div id="kmts_num"><h2>0.00 Kmts</h2>
                     </div>
                     </center>
-                </div>   
+                </div>  --> 
+                <div id="mapHorus" style="width:100%; height:150px; margin-bottom:15px"></div>
+                <button id="startGPS" onclick="tracking()">Enviar GPS</button>
+                <button id="stopGPS" onclick="tracking()" data-theme="b">Detener GPS</button>
+
+                <div id="kmts"class="ui-body ui-body-a">
+                    <h3> Recorrido </h3>
+                    <div id="dvHoraini" style="float:right; font-size:0.8em; margin-top:-45px; text-align:right"></div>
+                    <center>
+                    <div id="kmts_num"><h2>0.00 Kmts</h2>
+                    </div>
+                    </center>
+                </div> 
 
             </div><!-- Pagina 1 -->
 
             <!-- Pagina DMS Forms -->
             <div id="pagDMS_forms">
-                <div id="sbMenuForms" class="ui-grid-b" style="z-index:10; color:white; padding:0px; margin:-15px; margin-bottom:15px; position:fixed">
+                <div id="sbMenuForms" class="ui-grid-b" style="z-index:10; color:white; padding:0px; margin:-15px; margin-bottom:15px; position:fixed; max-height: 50px">
                     <div class="ui-block-a"><center><button class="btnH" onclick="formsList()" style="margin:0px; border-top:none; border-radius:0px; padding:2px"><img src="img/form_icon2.png" width="27%" style="margin-top:5px"  /></button></center></div>
                     <div class="ui-block-b"><center><button class="btnH" onclick="formsEnviados()" style="margin:0px; border-top:none; border-radius:0px; padding:2px"><img src="img/forms_sent.png" width="27%" style="margin-top:5px" /></button></center></div>
                     <div class="ui-block-c"><center><button class="btnH" onclick="formsPendientes()" style="margin:0px; border-top:none; border-radius:0px; padding:2px"><img src="img/pending.png" width="27%" style="margin-top:5px"  /></button></center></div>
@@ -182,8 +198,7 @@
                     <div class="ui-body ui-body-a">
                         <label for="anomesRVtas">Año Mes</label>
                         <select id="anomesRVtas" onchange="changYMVtas(this)">
-                            <option value="201809">201809</option>
-                            <option value="201810">201810</option>
+                            <option value="-">-</option>
                         </select>
                         <input type="button" id="btn_rptGlobal" value="Actualizar" onclick="reloadVentas(1,0)"/> 
                     </div>
@@ -196,7 +211,7 @@
                         <thead>
                             <tr>
                                 <th width="50%" align="center">Product</th>
-                                <th width="15%" align="center">Unidad</th>
+                                <th width="15%" align="center" data-priority="1">Unidad</th>
                                 <th width="35%" align="right" data-priority="critical">Ejecutado</th>
                                 <th width="35%" align="right" data-priority="2">Meta</th>
                                 <th width="35%" align="right" data-priority="1">Resul[%]</th>
@@ -315,103 +330,66 @@
                 <br /><br />
             </div><!-- Pagina 2 -->
 
-
-            <div id="pag3">
-                <img src="img/logotigo.png" width="27%" style="min-height:70px;"/>
-                <br />
-
-                <center>
-                    <label id="lbl_tracking">Iniciar Recorrido</label>
-                    <select name="iniTrack" id="iniTrack" data-role="slider" onchange="tracking()" style="padding-top:100px">
-                        <option value="1">Off</option>
-                        <option value="0">On</option>
+            <div id="dvPlanningDMS" >
+                <div class="ui-body ui-body-a">
+                    <button onclick="getPlanningDMS()">Actualizar Planning</button>
+                    <label for="semanaAnio">Semana Num.</label>
+                    <select id="cbSemanaNum" onchange="changeSemanaPlan(this)">
+                        <option value="-">-</option>
                     </select>
-                </center>
+                    <div id="dvPlanSemanal" style="margin-top:30px">                    
+                    </div>
+                </div>
+                <div data-role="collapsible" class="ui-collapsible" data-collapsed="false" data-iconpos="right" data-theme="a" style="margin-top:20px">
+                    <h3>PDVs</h3>
+                    <div id="dvPlanPDVs" class="ui-collapseible-content">                    
+                    </div>
+                </div> 
+                <div data-role="collapsible" class="ui-collapsible" data-collapsed="false" data-iconpos="right" style="margin-top:20px">
+                    <h3>Ficha PDV</h3>
+                    <div id="dvFichaPDV" class="ui-collapseible-content">                    
+                    </div>
+                </div>
+                <br />
+            </div>
 
-                <div id="map_tracking" class="map_tracking" style="width:100%; min-height:300px">
-                    <!--<img src="img/hnmap.png" width="100%" style="position:absolute"/>-->
-                </div>
-
-                <label id="msj" style="position:absolute">Estado Apagado</label>
-         
-                <!--
-                <div>
-                    <img src="img/hnmap.png" width="100%" />
-                </div>
-                <img id="btn_tack" style="margin-top:-50px; margin-left:35%; cursor:pointer" src="img/play.png" width="100px" onclick="tracking()" /> <br />
-                <center><label style="font-family:cambria; align:center" id="msj">Start Tracking</label>  </center>
-                <hr / >
-                <div id="test"></div>
-                -->
-            </div><!-- Pagina 3 -->
-            
-            <div id="pag4" style="margin:-7px">
-                
-                <div data-role="navbar">
-                    <ul>
-                        <li><a href="#" class="ui-btn-active" onclick="subIncidente(0)">Envio Incidente</a></li>
-                        <li><a href="#" onclick="subIncidente(1)">Reporte</a></li>
-                    </ul>
-                </div>
-                <div id="dvIncEnvia" class="ui-body ui-body-a">
-                    <h3>Registro de Incidentes</h3>
-                    <p>
-                        <label>Tipo Incidente</label>
-                        <select id="wTipoIncidente">
-                            <option selected>Error de Plataforma</option>
-                            <option>Problema de Informacion</option>
-                            <option>Otros</option>
-                        </select>
-
-                        <label>Detalle:</label>
-                        <textarea cols="20" rows="10" id="wDetalleIncidente" maxlength="160"></textarea>
-                        Telefono:
-                        <input type="number" id="vTel" placeholder="99999999">
-                        Mensaje:
-                        <textarea cols="20" rows="10" name="textsms" id="vMsj"></textarea>
-                        Archivo
-                        <input type="file" id="vFile" />
-                        <br />
-                        <button class="ui-btn ui-corner-all ui-btn-b" onclick="enviarMensaje()">Enviar</button>
-                    </p>
-                </div>
-
-                <div id="dvIncRep" class="ui-body ui-body-a">
-                    <h3>Reporde de Incidentes</h3>
-                    <p>
-                        <div id="tblIncident">
-                            <table data-role="table" data-mode="columntoggle" class="ui-responsive table-stripe ui-responsive">
-                                <thead>
-                                    <tr><th>Titulo</th>
-                                        <th>Estado</th>
-                                        <th data-priority="1">Responsable</th>
-                                        <th data-priority="2">Ultimo Cambio</th></tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td >Prueba</td>
-                                        <td>En Proceso</td>
-                                        <td>Fausto</td>
-                                        <td>19/Jul/2018</td>
-                                    </tr>
-                                    <tr>
-                                        <td >Prueba 2</td>
-                                        <td>En Proceso</td>
-                                        <td>Fausto</td>
-                                        <td>19/Jul/2018</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        <button class="ui-btn ui-corner-all ui-btn-a">Refrescar</button>
-                    </p>
-                </div>
-            </div><!-- Pagina 4 -->
 
             <div id="dv_forms_template">
                 <div id="dv_forms_template_content"></div>
+            </div>
+
+            <div id="dvMainGerencial">
+                <label style="float:right; margin-top:15px; font-size:0.8em; color:blue; cursor:pointer" onclick="getDatosUsuario()">Actualizar</label>--
+                <div id="dvChartG1" style="width:102%"></div>
             </div> 
+            <div id="dvRptG">
+                <div class="ui-body ui-body-a">
+                    <button onclick="getDtosG()">Actualizar</button>                    
+                    <select id="cbAnomesSucs" onchange="changeProduct()">
+                        <option value="0">-</option>
+                    </select>
+                </div>
+                <br />
+                <div class="ui-body ui-body-a">  
+                    <label for="semanaAnio">Producto</label>
+                    <select id="cbProductoDashG" onchange="changeProduct()" data-mini="true">
+                        <option value="EPIN">EPIN</option>
+                        <option value="TIGO MONEY">TIGO MONEY</option>
+                        <option value="TARJETA PREPAGO">TARJETA PREPAGO</option>
+                        <option value="TARJETA VAS">TARJETAS VAS</option>                        
+                        <option value="SIMCARDS">SIMCARDS</option>
+                        <option value="SMARTPHONES">SMARTPHONES</option>
+                    </select>              
+                    <div id="dvTblEjeSuc" style="margin-top:30px">                    
+                    </div>
+                </div>
+                <br />
+                <div id="dvDetSucursal" class="ui-body ui-body-a">
+                </div>
+                <br />
+                <div id="dvDetSucursalDiario" class="ui-body ui-body-a">
+                </div>
+            </div>
             
         </div>
         <!-- div main -->  
@@ -436,21 +414,33 @@
                 <!--<a href="#"  style="background-color: #0B0B61; border:0" onclick="switchMenu(0,0)"><h3>Home</h3></a>-->
                 <!--<a href="#" style="width:15%; margin:1px; height:40px; float:right; border:0px; align:right; background-color: #0B0B61; border:0" class="ui-btn ui-icon-delete ui-icon-notext" data-rel="close" data-target="#dvMenu"></a>-->
             </li>
-            <li data-icon="false" style="background-color:#0B0B61; border:0; padding:0">
+            <li id="mnHorus" data-icon="false" style="background-color:#0B0B61; border:0; padding:0">
                 <div class="lbar"></div>
                 <button data-icon="ui-btn ui-btn-icon-left ui-icon-location" style="text-align:left; background-color:#0B0B61; border:0; margin:0; margin-left:5px;" onclick="switchMenu(0,2)">SO Horus</button>
                 <!--<a href="#" style="background-color: #0B0B61; border:0; border-top:solid thin #0A0A2A" onclick="switchMenu(1,1)"></a>-->
             </li>
-            <li data-icon="false" style="background-color:#0B0B61; border:0; padding:0">
+            <li id="mnForms" data-icon="false" style="background-color:#0B0B61; border:0; padding:0">
                 <div class="lbar"></div>
                 <button data-icon="ui-btn ui-btn-icon-left ui-icon-arrow-u-r" style="text-align:left; background-color:#0B0B61; border:0; margin:0; margin-left:5px;" onclick="switchMenu(0,3)">Formularios DMS</button>
                 <!--<a href="#" style="background-color: #0B0B61; border:0; border-top:solid thin #0A0A2A" onclick="switchMenu(1,1)"></a>-->
             </li>
-            <li data-icon="false" style="background-color:#0B0B61; border:0; padding:0">
+            <li id="mnRptVtas" data-icon="false" style="background-color:#0B0B61; border:0; padding:0">
                 <div class="lbar"></div>
                 <button data-icon="ui-btn ui-btn-icon-left ui-icon-check" style="text-align:left; background-color:#0B0B61; border:0; margin:0; margin-left:5px;" onclick="switchMenu(0,4)">Reporte Ventas</button>
                 <!--<a href="#" style="background-color: #0B0B61; border:0; border-top:solid thin #0A0A2A" onclick="switchMenu(1,1)"></a>-->
             </li>
+
+            <li id="mnRptG" data-icon="false" style="background-color:#0B0B61; border:0; padding:0">
+                <div class="lbar"></div>
+                <button data-icon="ui-btn ui-btn-icon-left ui-icon-check" style="text-align:left; background-color:#0B0B61; border:0; margin:0; margin-left:5px;" onclick="switchMenu(0,6)">Reportes Gerenciales</button>
+                <!--<a href="#" style="background-color: #0B0B61; border:0; border-top:solid thin #0A0A2A" onclick="switchMenu(1,1)"></a>-->
+            </li>
+
+            <li id="mnDmsPlanin" data-icon="false" style="background-color:#0B0B61; border:0; padding:0">
+                <div class="lbar"></div>
+                <button data-icon="ui-btn ui-btn-icon-left ui-icon-calendar" style="text-align:left; background-color:#0B0B61; border:0; margin:0; margin-left:5px;" onclick="switchMenu(0,5)">DMS Planning</button>
+                <!--<a href="#" style="background-color: #0B0B61; border:0; border-top:solid thin #0A0A2A" onclick="switchMenu(1,1)"></a>-->
+            </li>            
 
             <li data-icon="false" style="background-color:#0B0B61; border:0; padding:0">
                 <br /><br /><br />
@@ -473,16 +463,16 @@
 <script type="text/javascript" src="js/jquery.mobile-1.4.5.min.js"></script>
 <script type="text/javascript" src="js/highcharts.src.js"></script>
 <script type="text/javascript" src="js/highcharts-more.src.js"></script>
+<script src="https://code.highcharts.com/modules/variable-pie.js"></script>
 
 <script type="text/javascript" src="js/js_main.js"></script>
 <script type="text/javascript" src="js/js_db.js"></script>
 <!--<script type="text/javascript" src="js/toast.js"></script>-->
 <script type="text/javascript" src="cordova.js"></script>
 <script type="text/javascript">  
-
+   
     resizer();
     app.initialize();
-
 function resizer(){
     vW = $(window).width();
     vH = $(window).height();

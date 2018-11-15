@@ -7,12 +7,13 @@ var vTimerGPS; // = 30000;
 var vIdFormulario ='XO';
 var vLat = 0;
 var vLng = 0;
-//var ws_url = 'http://localhost/ws_so/service_so.php'; 
+//var ws_url = 'http://localhost:8090/ws_so/service_so.php'; 
 var ws_url = 'https://190.4.63.207/ws_so/service_so.php';
 
-var vDatosUsuario ={"user":"", "login":"", "name":"", "phone":0, "email":"na", "job":"na", "id_dms":0};
-var vTitle ="DMS Experience";
+var vDatosUsuario ={"user":"", "login":"", "name":"", "phone":0, "email":"na", "job":"na", "id_dms":0, "perfil":0, "id_pdv_dlr":0};
+var vTitle ="S.O. DMS Experience";
 var map;
+var markHorus;
 var pgActual = 0;
 var pgBack = 0;
 
@@ -25,11 +26,18 @@ var vFormData = {};
 var vFormsPendientes = [];
 var vFileG;  //Variable para foto del usuario
 
+var lat1, lng1;
+var vDistance = 0;
+var vFechIniHorus;
+
 //var webSvrListener =  setInterval(function(){ consultSVR()}, 59000);
 var pagRoot = [{id:0, back:0},
                 {id:1, back:0},
                 {id:2, back:0},
                 {id:3, back:0},
+                {id:4, back:0},
+                {id:5, back:0},
+                {id:6, back:0},
                 {id:100, back:3},
                 {id:101, back:3}];
 var app = {
@@ -49,7 +57,7 @@ var app = {
         // Initialize the map view  
  
         //cordova.plugins.backgroundMode.setEnabled(true);  
-        cordova.plugins.backgroundMode.overrideBackButton(); 
+        //cordova.plugins.backgroundMode.overrideBackButton(); 
         cordova.plugins.backgroundMode.setDefaults({title:'SO - Horus', text: 'Tracking..', resume:false, hidden:true}); 
        
         cordova.plugins.backgroundMode.on('activate',function(){
@@ -80,7 +88,7 @@ var app = {
         document.addEventListener('pause', function(e){
             //tracking();
             //clearInterval(vIntervalGeo);
-            //vInteDash = setInterval(function(){ getMapLocation(); }, vTimerGPS); 
+            //vInteDash = setInterval(function(){ setMarkLocation(); }, vTimerGPS); 
         });
 
         document.addEventListener('backbutton', function(e){
@@ -95,20 +103,34 @@ var app = {
 }
 
 $(document).ready(function(e){
+
+    //tablero1G();
+
     Highcharts.setOptions({
       credits: {
         enabled: false
       }
     }); 
-    setTimeout(function(){getMap(14.618086,-86.959082); }, 2000);
+
+    setTimeout(function(){initMap(14.618086,-86.959082);}, 2000);
     hide_pags();   
     var img = new Image();
+    var fechx = new Date();
+    var wknum = getWeekNumber(fechx);
     //img.src = 'img/salesman.png';
     //saveImgtoDB(img); 
 
     $("#dvDMS").show();
     $('#lbl_title').html('DMS EXPERIENCE');            
     $("#dvHead").show();
+    $('#anomesRVtas').empty();
+    $('#anomesRVtas').append('<option value="' + getYMD(0).toString().substr(0,6) + '" selected="selected">'+ getYMD(0).toString().substr(0,6) +'</option>');
+    $('#anomesRVtas').selectmenu("refresh");
+
+    $("#cbSemanaNum").empty();
+    $('#cbSemanaNum').append('<option value="' + wknum[1] + '" selected="selected">'+ wknum[1] +'</option>');
+    $('#cbSemanaNum').selectmenu("refresh");
+    
     //map = plugin.google.maps.Map.getMap($("#dvMain")); 
 
     if (vFlagTracking==false){
@@ -127,7 +149,6 @@ $(document).ready(function(e){
 
         vDatosUsuario.user = tempLogin.user;
         vDatosUsuario.login = vLogin;
-
         if(parseInt(vLogin) != 1){ 
             db.transaction(function(cmd){   
                 cmd.executeSql("SELECT * FROM users where login = ? ", [1], function (cmd, results) {
@@ -160,7 +181,7 @@ $(document).ready(function(e){
                                         vDatosUsuario.login = 1;
                                         show_datos_user(vDatosUsuario.user);
                                         get_forms_info();
-                                        logInOut(vDatosUsuario.user, 1);      
+                                        logInOut(vDatosUsuario.user, 1); 
                                         
                                         $("#page").show();
                                         $("#dvMain").show();
@@ -175,7 +196,7 @@ $(document).ready(function(e){
                         });                        	                                           
                     }else if (len > 0){   
                         //window.location.replace('login.html');                         
-                        console.log('Loged In');
+                        //console.log('Loged In');
                         vDatosUsuario.user = results.rows.item(i).id;
                         vDatosUsuario.login = 1;
                         show_datos_user(vDatosUsuario.user);
@@ -186,6 +207,7 @@ $(document).ready(function(e){
                         $("#dvMain").show();
                         $("#bg_login").hide();
                         $("#dvUserName").html(vDatosUsuario.user);
+
                         setTimeout(function(){
                             var strUrl = '';
                             var arrFile = [];
@@ -287,6 +309,11 @@ function chngFechaCierreVtas(ev){
     cierresDiarios(vFech);
 }
 
+function changeSemanaPlan(cbsem){
+    //console.log(cbsem.value);
+    showPlanSemana(parseInt(cbsem.value), getYMD(0).toString().substr(0,6));
+}
+
 function show_datos_user(vUser){
     db.transaction(function(cmd2){
         cmd2.executeSql("SELECT * FROM users where id = ?", [vUser], function (cmd2, results) {
@@ -298,6 +325,8 @@ function show_datos_user(vUser){
                 vDatosUsuario.job = results.rows.item(0).job_title;
                 vDatosUsuario.id_dms = results.rows.item(0).id_dms;
                 vDatosUsuario.phone = results.rows.item(0).phone;
+                vDatosUsuario.perfil = results.rows.item(0).type;
+                vDatosUsuario.id_pdv_dlr = results.rows.item(0).id_pdv_dlr;
 
 
                 $("#id_dms_user").html(vDatosUsuario.id_dms);
@@ -305,7 +334,10 @@ function show_datos_user(vUser){
                 $("#uid_user").html(vDatosUsuario.user.toLowerCase());
                 $("#name_user").html(vDatosUsuario.name);
                 $("#email_user").html(vDatosUsuario.email);
-                $("#job_user").html(vDatosUsuario.job); 
+                $("#job_user").html(vDatosUsuario.job);                 
+                $("#id_dms_dlr").html(vDatosUsuario.id_pdv_dlr); 
+
+                validaPerfil();
             }
         });
     });
@@ -403,6 +435,7 @@ function hide_pags(){
     $('#dv_forms_template').hide();
     $("#formsRPT").hide();
     $("#dvReporteVentas").hide();
+    $("#dvPlanningDMS").hide();
 
     //Forms DMS    
     $("#forms_enviados").hide();
@@ -411,55 +444,19 @@ function hide_pags(){
     //Reportes Ventas
     $("#sbRtpGlobal").hide();
     $("#sbCierreD").hide();
+
+    //Reportes Gerenciales
+    $("#dvRptG").hide();
+    $("#dvMainGerencial").hide();
+
+    $("#dvFichaPDV").html('');
+    $("#dvFichaPDV").trigger('create');
+    try{
+        $("#finderPDv1").val('');
+        var dvListx= document.getElementById('dvListPDVs');
+        document.getElementById('dv_forms_template').removeChild(dvListx);
+    }catch(e){null};
 }
-
-
-function subIncidente(vFlag){
-    switch(vFlag)
-    {
-        case 0:
-            $("#dvIncEnvia").show();
-            $("#dvIncRep").hide();
-        break;
-        case 1:            
-            $("#dvIncEnvia").hide();
-            $("#dvIncRep").show(); 
-        break;
-    }
-
-}
-
-function enviarMensaje(){
-    var number = $("#vTel").val();
-    var msj = $("#wTipoIncidente").val() + '-' + $("#wDetalleIncidente").val() + ' ' + $("#vMsj").val();
-    console.log($("#wTipoIncidente").val());
-    sendSMS(msj, number);
-}
-
-function sendSMS(vMsj, vNumber){
-    if(SMS){
-        /*SMS.hasPermission(function(vPermission){
-            alert(vPermission);
-             if (!vPermission) {
-                SMS.requestPermission(function() {
-                    alert('[OK] Permission accepted');
-                    SMS.sendSMS(vNumber, vMsj, function(e){ alert('MSJ Sent'); }, function(e){  alert('Error: ' + e)});
-                }, function(error) {
-                    console.info('[WARN] Permission not accepted')
-                    // Handle permission not accepted
-                });
-            }
-        }, function(e){ alert(e); });*/
-        SMS.sendSMS(vNumber, vMsj, function(e){ 
-            alert('MSJ Sent'); 
-            $("#wDetalleIncidente").val('');
-            $("#vTel").val('');
-            $("#vMsj").val(''); }, function(e){  alert('Error: ' + e)});
-
-    }    
-}
-
-
 
 function takePicture(){
     navigator.camera.getPicture(onSuccess, onFail, { quality: 50, sourceType:Camera.PictureSourceType.CAMERA, correctOrientation:true,
@@ -545,7 +542,6 @@ function saveImgtoDB(imgFile){
 }
 
 function backButton(){
-
     if(parseInt(pgActual) != 0){        
         for(i=0; i<pagRoot.length; i++){
             if(parseInt(pagRoot[i].id) == parseInt(pgActual)){
@@ -602,12 +598,91 @@ function switchMenu(vIdFrom, vIdTo){
 
         break;
         case 4:
+            var aniomes = 0;
+            var flag_mes_ac=0;
+            var aniomesact = getYMD(0).toString().substr(0,6);
             hide_pags();
             $("#dvReporteVentas").show();
             $("#sbRtpGlobal").show();
-            reporteVentas(0);
-            $("#anomesRVtas").val(parseInt(getYMD(0).substr(0,6)));
-            $("#anomesRVtas").selectmenu('refresh');
+            setTimeout(function(){
+            db.transaction(function(cmd){ 
+                cmd.executeSql('SELECT distinct anomes FROM tbl_ventas order by anomes asc', [], function (cmd, results) {
+                    var len = results.rows.length;
+                    if(len>0){ $("#anomesRVtas").empty(); $('#anomesRVtas').append('<option value="' + 0 + '" selected="selected">-</option>'); }
+                    for(j=0;j<len;j++){
+                        aniomes=results.rows[j].anomes;
+                        if(parseInt(aniomes)==parseInt(aniomesact)){
+                            flag_mes_ac = 1;
+                        }
+                        //console.log(results.rows[0].semana_anio);                        
+                        $('#anomesRVtas').append('<option value="' + results.rows[j].anomes + '">'+ results.rows[j].anomes +'</option>');
+                        
+                    }  
+                    if(flag_mes_ac==0){ 
+                        $('#anomesRVtas').append('<option value="' + aniomesact + '" selected="selected">'+ aniomesact +'</option>');
+                    }
+
+                    $("#anomesRVtas").val(aniomes);
+                    $("#anomesRVtas").selectmenu('refresh');
+                    reporteVentas(aniomes);
+                });
+            });
+            },800);
+        break;
+        case 5:
+            var anioCb = getYMD(0).toString().substr(0,4);
+            var fech = new Date();
+            var weekNum = getWeekNumber(fech);
+            var weekDb = 0;
+
+            setTimeout(function(){
+            db.transaction(function(cmd){ 
+                cmd.executeSql('SELECT distinct semana_anio FROM tbl_plan_dms where substr(aniomes,1,4)=? order by semana_anio desc', [anioCb], function (cmd, results) {
+                    var len = results.rows.length;
+                    if(len>0){ $("#cbSemanaNum").empty(); $('#cbSemanaNum').append('<option value="' + 0 + '" selected="selected">-</option>'); }
+                    for(j=0;j<len;j++){
+                        if(weekDb==0){
+                            weekDb=results.rows[j].semana_anio;
+                        }
+                        //console.log(results.rows[0].semana_anio);
+                        $('#cbSemanaNum').append('<option value="' + results.rows[j].semana_anio + '">'+ results.rows[j].semana_anio +'</option>');
+                    }
+                    $('#cbSemanaNum').val(weekDb);
+                    $('#cbSemanaNum').selectmenu("refresh");
+                    showPlanSemana(weekDb, getYMD(0).toString().substr(0,6));
+                });
+            });
+            },800);
+            hide_pags();
+            $("#dvPlanningDMS").show();
+        break;
+        case 6:
+            hide_pags();
+            $.mobile.loading('show');
+            $("#dvRptG").show();
+            setTimeout(function(){
+            var aniomes_cb1 = getYMD(0).substr(0,6);
+            $('#cbAnomesSucs').empty();
+            $('#cbAnomesSucs').append('<option value="' + aniomes_cb1 + '">'+ aniomes_cb1 +'</option>');
+            db.transaction(function(cmd){ 
+                cmd.executeSql('SELECT distinct anomes FROM tbl_ejec_sucursales order by anomes desc', [], function (cmd, results) {
+                    var len = results.rows.length;
+                    if(len>0){ $("#cbAnomesSucs").empty(); $('#cbAnomesSucs').append('<option value="' + aniomes_cb1 + '" selected="selected">'+ aniomes_cb1 +'</option>'); }
+                    for(j=0;j<len;j++){
+                        if(results.rows[j].anomes!=aniomes_cb1){
+                            $('#cbAnomesSucs').append('<option value="' + results.rows[j].anomes + '">'+ results.rows[j].anomes +'</option>');
+                        }
+                    }
+                    $('#cbAnomesSucs').val(aniomes_cb1);
+                    $('#cbAnomesSucs').selectmenu("refresh");                    
+
+                    $("#dvDetSucursal").html('');
+                    $("#dvDetSucursalDiario").html('');
+                    showDatosSucursales(vDatosUsuario.id_pdv_dlr, $("#cbAnomesSucs").val(), $("#cbProductoDashG").val());
+                    $.mobile.loading('hide');
+                });
+            });
+            },800);
         break;
         case 100:
             hide_pags();
@@ -672,12 +747,37 @@ function onSuccess(position){
 
 
     saveGPS(getYMD(0) + h + m + sc, position.coords.latitude, position.coords.longitude, vDatosUsuario.user); 
-    getMap(position.coords.latitude, position.coords.longitude);
+    setMark(position.coords.latitude, position.coords.longitude);
 
-    vQre = 'INSERT INTO records (fecha, lat, lng, user) VALUES(\'' + getYMD(0) + h + m + sc + '\',';
-    vQre += position.coords.latitude + ',' + position.coords.longitude + ',\''+ vDatosUsuario.user + '\')';
-    //ejecutaSQL(vQre, 0);   
-    
+    vQre = 'DELETE FROM tbl_kmtrs';
+    ejecutaSQL(vQre, 0);
+
+    setTimeout(function(){
+
+        if(lat1 != 0 && lng1 !=0){
+            vD = getDistanceFromLatLonInKm(lat1, lng1, vLat,vLng);
+            //console.log(vD);
+            vDistance += parseFloat(vD);
+        }else{
+            vDistance = 0;
+        }
+        
+        vQre = 'insert into tbl_kmtrs (user, fech, lat1, lng1, kmtr) ';
+        vQre += 'values (\''+ vDatosUsuario.user +'\',' + (getYMD(0) + ''+ getHMS()) +',' + vLat +',' + vLng +','+ vDistance +')';
+        ejecutaSQL(vQre, 0);
+
+        lat1 = vLat;
+        lng1 = vLng;
+
+        setMark(position.coords.latitude, position.coords.longitude);
+        if(vFechIniHorus != 0){
+            $("#dvHoraini").html('<b>Hora Inicio</b><br/>' + getFechFormated(vFechIniHorus));
+        }else{
+            $("#dvHoraini").html('<b>Hora Inicio</b><br/>-');
+        }        
+        $("#kmts_num").html('<h2>' + vDistance.toFixed(2) + ' Kmts.</h2>');
+
+    }, 100); 
     
     //$("#test").append(d.getHours() +':'+ d.getMinutes() + '<br />' + position.coords.latitude + '/' + position.coords.longitude + '<br />');
     //navigator.vibrate(100);
@@ -766,28 +866,26 @@ function reloadkpi(){
 }
 
 
-
-function showdata(){
-
-    $.ajax({
-        type: 'POST',
-        dataType:'text',
-        data: {op:1, vx:userWS, vy:pdwWS},
-        url: 'http://iteshn.hol.es/server_app/svrConsultasSO.php',
-        success: function(data){
-            alert(data);
-            console.log('Sucess Save on Server');
-        },
-        error: function(data){
-            console.log(data);
-            alert('Error de conexion con el servidor');
-        }
-    });
-}
-
 function tracking(){
 
     if(vFlagTracking ==  false){
+        db.transaction(function(cmd2){
+            cmd2.executeSql("SELECT * FROM tbl_kmtrs", [], function (cmd2, results) {
+                var len = results.rows.length;
+                if(len>0){
+                    lat1 = results.rows.item(0).lat1;
+                    lng1 = results.rows.item(0).lng1;
+                    vDistance = results.rows.item(0).kmtr;
+                    vFechIniHorus = results.rows.item(0).fech;
+                }else{
+                    lat1 = 0;
+                    lng1 = 0;
+                    vDistance = 0;
+                    vFechIniHorus = getYMD(0) +''+ getHMS();
+                }
+            });
+        });
+
         cordova.plugins.backgroundMode.setEnabled(true); 
         clearInterval(vIntervalGeo);
         console.log('starting..');
@@ -804,6 +902,8 @@ function tracking(){
         clearInterval(vIntervalGeo);
         vFlagTracking = false;
         cordova.plugins.backgroundMode.setEnabled(false); 
+        vQre = 'DELETE FROM tbl_kmtrs';
+        ejecutaSQL(vQre, 0);
     }
 }
 
@@ -811,97 +911,6 @@ function logout(){
     //console.log(vDatosUsuario.user);
     logInOut(vDatosUsuario.user, 0);
     setTimeout(function(){ window.location.replace('index.html?user=0&login=0'); }, 800);
-}
-
-
-
-function getDataDB2(vQry, vZn, vKpi, vTypeD){
-    var dataDrill = [];
-
-    db.transaction(function(cmd2){  
-        //console.log(vQry);        
-        cmd2.executeSql(vQry,[], function (cmd2, results2) {
-            //console.log('Sub Cnl por Zona ' + results2.rows.length); 
-
-            if(vTypeD==0){
-                for(var j=0; j<results2.rows.length; j++){
-                    dataDrill.push([results2.rows.item(j).sub_cnl, results2.rows.item(j).ejecutado]);
-                } 
-                dataDrill1.push({"name":"Zona " + vZn, "id": vKpi + " Zona "+vZn, "data":dataDrill});
-            }else{
-                for(var j=0; j<results2.rows.length; j++){
-                    dataDrill.push(['Zona ' + results2.rows.item(j).zona, results2.rows.item(j).ejecutado]);
-                } 
-                dataDrill1.push({"name":vZn, "id": vKpi + '-' + vZn, "data":dataDrill});
-            }
-            
-
-            //console.log(JSON.stringify(dataDrill1));
-        });
-    }, function(e){console.log(e);});
-}
-
-
-function consultSVR(){
-    //alert('hello');
-    var varJSNkpis;
-    var vCountRegs = 0;
-    var vQry1 = '';
-    var vQry2 = '';
-    var vYMD =  getYMD(-1);
-    var vDataDecode = '';
-
-    //console.log('consulting server');
-    //$.post('http://localhost/proyects_amg/web/websvr/svrkpi/svrConsultas.php', {op:2, kpi:0, date:vYMD, user:userWS, pdw:pdwWS}, function(rData){    //'https://svrconsultas.appspot.com/test/', function(rData){
-    $.post('http://localhost:8081/ws_so1/ws_consultas_boc/kpis/2017/09/1101', function(rData){
-    //$.post('https://svrconsultas.appspot.com/test/', {user:userWS, pdw:pdwWS}, function(rData){
-        //console.log(str2Hex(rData));
-        alert(rData);
-        //console.log(rData);
-        //vDataDecode = hex2a(rData);
-        vDataDecode = rData;
-
-        varJSNkpis = JSON.parse(vDataDecode);
-        vCountRegs = varJSNkpis.kpis.length;
-        console.log(vCountRegs);
-
-        vGcountRegs = vCountRegs*2;
-        vGcountRegs_Flag = 0;
-
-        for(var i=0; i<vCountRegs; i++){
-            //Delete from Main Data KPI
-            //vQry1 = "DELETE FROM kpi_data WHERE id="+ varJSNkpis.kpis[i].id;
-            vQry1 = "DELETE FROM kpi_data WHERE id="+ varJSNkpis.kpis[i].id + " and zona=" + varJSNkpis.kpis[i].zona + " and cnl='" + varJSNkpis.kpis[i].cnl + "' and sub_cnl='" + varJSNkpis.kpis[i].sb_cnl
-                    + "' and territorio=" + varJSNkpis.kpis[i].ter;
-            ejecutaSQL(vQry1, 0);
-
-            //Delete from Hist Data KPI
-            vQry1 = "DELETE FROM kpi_data_hist WHERE id="+ varJSNkpis.kpis[i].id + " and zona=" + varJSNkpis.kpis[i].zona + " and cnl='" + varJSNkpis.kpis[i].cnl + "' and sub_cnl='" + varJSNkpis.kpis[i].sb_cnl
-                    + "' and territorio=" + varJSNkpis.kpis[i].ter + " and fecha=" + varJSNkpis.kpis[i].fecha + '';
-            ejecutaSQL(vQry1, 0);            
-        }
-        sleep(2000);
-
-        for(var i=0; i<vCountRegs; i++){
-
-            //Insert into Main Data KPI
-            vQry2 = "INSERT INTO kpi_data VALUES(" + varJSNkpis.kpis[i].id + ",'" + varJSNkpis.kpis[i].kpi + "'," + varJSNkpis.kpis[i].ter + "," + varJSNkpis.kpis[i].year + "," + varJSNkpis.kpis[i].month
-                    + "," + varJSNkpis.kpis[i].fecha + "," + varJSNkpis.kpis[i].zona + ",'" + varJSNkpis.kpis[i].cnl + "','" + varJSNkpis.kpis[i].sb_cnl 
-                    + "'," + varJSNkpis.kpis[i].ejecutado + ',' + varJSNkpis.kpis[i].forecast +',' + varJSNkpis.kpis[i].budget + ",'" + varJSNkpis.kpis[i].unit
-                     + "','" + varJSNkpis.kpis[i].bu + "')";
-            //console.log(vQry2);
-            ejecutaSQL(vQry2, 1);
-            sleep(500);
-
-            //Insert into Hist Data KPI
-            vQry2 = "INSERT INTO kpi_data_hist VALUES(" + varJSNkpis.kpis[i].id + ",'" + varJSNkpis.kpis[i].kpi + "'," + varJSNkpis.kpis[i].ter + "," + varJSNkpis.kpis[i].year + "," + varJSNkpis.kpis[i].month
-                    + "," + varJSNkpis.kpis[i].fecha + "," + varJSNkpis.kpis[i].zona + ",'" + varJSNkpis.kpis[i].cnl + "','" + varJSNkpis.kpis[i].sb_cnl 
-                    + "'," + varJSNkpis.kpis[i].ejecutado + ',' + varJSNkpis.kpis[i].forecast +',' + varJSNkpis.kpis[i].budget + ",'" + varJSNkpis.kpis[i].unit
-                     + "','" + varJSNkpis.kpis[i].bu + "')";
-            //console.log(vQry2);
-            ejecutaSQL(vQry2, 1);
-        }
-    });
 }
 
 //Sleep 
@@ -1032,39 +1041,11 @@ function b64_to_str(vStr){
 }
 
 
-function getMap(latitude, longitude) {
-
-    var mapOptions = {
-        center: new google.maps.LatLng(0, 0),
-        zoom: 1,
-        mapTypeId: google.maps.MapTypeId.ROADMAP
-    };
-
-    map = new google.maps.Map
-    (document.getElementById("mapHorus"), mapOptions);
-
-
+function setMark(latitude, longitude) {
     var latLong = new google.maps.LatLng(latitude, longitude);
-
-    var marker = new google.maps.Marker({
-        position: latLong
-    });
-
-    marker.setMap(map);
-    map.setZoom(7);
-    map.setCenter(marker.getPosition());
-}
-
-function setMarkGPS(lat, lng){
-    var latLong = new google.maps.LatLng(lat, lng);
-    marker.setMap(null);
-
-    marker = new google.maps.Marker({
-        position: latLong
-    });
-
-    marker.setMap(map);
-    map.setCenter(marker.getPosition());
+    markHorus.setPosition(latLong);
+    map.setZoom(12);
+    map.setCenter(markHorus.getPosition());
 }
 
 
@@ -1109,24 +1090,6 @@ function desplegarForm(vIdForm, callback){
             }   
         });
     });
-
-
-    /*[{tipo:111, id:1001, name:'Pergunta de prueba 1', ops:[], func:''},
-    {tipo:101, id:1002, name:'Pergunta de prueba 2', ops:[], func:''},
-    {tipo:101, id:1072, name:'Pergunta de prueba 4', ops:[], func:''},
-    {tipo:101, id:1022, name:'Pergunta de prueba 5', ops:[], func:''},
-    {tipo:101, id:1032, name:'Pergunta de prueba 6', ops:[], func:''},
-    {tipo:101, id:1042, name:'Pergunta de prueba 7', ops:[], func:''},
-    {tipo:101, id:1052, name:'Pergunta de prueba 8', ops:[], func:''},
-    {tipo:101, id:1062, name:'Pergunta de prueba 9', ops:[], func:''},
-
-    {tipo:103, id:1004, name:'Pergunta de prueba 4', ops:['Op1','Op2','Op3'], func:''},
-    {tipo:101, id:1003, name:'Pergunta de prueba 3', ops:[], func:''},
-    {tipo:104, id:1004, name:'Pergunta de prueba 4', ops:[{id:1010, name:'Op1'},{id:1012, name:'Op2'},{id:1013, name:'Op3'}], func:''},                    
-    {tipo:105, id:1005, name:'Pergunta de prueba 5', ops:[{id:1110, name:'Op12'},{id:1112, name:'Op22'},{id:1113, name:'Op32'}], func:''}];*/
-
-    
-
 }
 
 function drawForm(vItems, vtittle, vScript){
@@ -1188,16 +1151,16 @@ function drawObject(vTipo, vId, vNombre, vOptions, vfunc){
         case 104:
             vStr += '<fieldset data-role="controlgroup" id="dv'+ vId +'" style="margin-bottom:18px"><legend>'+ vNombre +'</legend>';
             for(i=0; i<vOptions.length; i++){
-                vStr += '<input type="radio" name="'+ vId + '" id="'+ vOptions[i] +'" value="'+ vOptions[i] +'">';
-                vStr += '<label for="'+ vOptions[i] +'">'+ vOptions[i] +'</label>';
+                vStr += '<input type="radio" name="'+ vId + '" id="' + vId + vOptions[i] +'" value="'+ vOptions[i] +'">';
+                vStr += '<label for="'+  vId + vOptions[i] +'">'+ vOptions[i] +'</label>';
             }
             vStr += '</fieldset><br />';
         break;
         case 105:
             vStr += '<fieldset data-role="controlgroup" id="dv'+ vId +'" style="margin-bottom:18px"><legend>'+ vNombre +'</legend>';
             for(i=0; i<vOptions.length; i++){
-                vStr += '<input type="checkbox" name="'+ vId + '" id="'+ vOptions[i] +'" value="'+ vOptions[i] +'">';
-                vStr += '<label for="'+ vOptions[i] +'">'+ vOptions[i] +'</label>';
+                vStr += '<input type="checkbox" name="'+ vId + '" id="'+ vId + vOptions[i] +'" value="'+ vOptions[i] +'">';
+                vStr += '<label for="'+ vId + vOptions[i] +'">'+ vOptions[i] +'</label>';
             }
             vStr += '</fieldset><br />';
         break;
@@ -1210,7 +1173,6 @@ function drawObject(vTipo, vId, vNombre, vOptions, vfunc){
 
 // Fumcion para obtener formularios del servidor
 function updateForms(){
-
     $.ajax({
         type: 'POST',
         data: {m:301,vx:userWS, vy:pdwWS, ui:vDatosUsuario.user},        
@@ -1238,6 +1200,7 @@ function updateForms(){
             }
         }, 
         error: function(e){
+            console.log(e);
             $.mobile.loading( 'show', {
                 text: 'Servidor no responde.',
                 textVisible: true,
@@ -1396,9 +1359,9 @@ function envioFormsPend(){
     }   
 }
 
-function continuarForms()
+function continuarForms(){   
 
-{    var tempForm = [];
+    var tempForm = [];
     var temArr = [];
     tempForm.push({id_form:'', vdata:[], fech:'', lat:0, lng:0});
     tempForm[0].id_form = vFormData.id_form;
@@ -1422,7 +1385,7 @@ function continuarForms()
                     vItem = document.getElementsByName(vFormData.vdata[i].id);
                     //console.log(vItem);
                     for(j=0; j<vItem.length; j++){
-                        console.log(vItem[j]);
+                        //console.log(vItem[j]);
                         if(vItem[j].checked == true){
                             x1 = vItem[j].value;
                         }
@@ -1848,13 +1811,13 @@ function cierresDiarios(vFecha){
                 for(i=0; i<len; i++){
                     //console.log(results.rows[0].producto);
                     vCats.push(results.rows[i].producto);
-                    vMetas.push(parseInt(results.rows[i].meta));
+                    /*vMetas.push(parseInt(results.rows[i].meta));
                     if(parseInt(results.rows[i].meta)>0){
                         temp1 = (parseFloat(results.rows[i].monto)/parseFloat(results.rows[i].meta))*100;
                     }else{
                         temp1 = 100;
-                    }
-                    vEjecucion.push(parseInt(temp1.toFixed(0)));
+                    }*/
+                    vEjecucion.push(parseFloat((results.rows[i].monto/1000).toFixed(2)));
 
                     if(results.rows[i].producto.toUpperCase() == 'EPIN'){
                         tot_cierre += parseFloat(results.rows[i].monto);
@@ -1894,6 +1857,9 @@ function cierresDiarios(vFecha){
 
 function reloadVentas(vaniomes, vFlag){
     var vFech;
+    var aniomes_cb=0;
+    var flag_mes_ac=0;
+    var aniomesact = getYMD(0).toString().substr(0,6);
     //console.log($("#anomesRVtas").val());
     if(vaniomes==0){
         vaniomes =  getYMD(0).substr(0,6);
@@ -1909,6 +1875,7 @@ function reloadVentas(vaniomes, vFlag){
         alert('ID DMS no Establecido');
     }else{
         $.mobile.loading('show'); 
+        //console.log(vaniomes);
         $.ajax({
             url:ws_url,
             type:'POST',
@@ -1918,7 +1885,22 @@ function reloadVentas(vaniomes, vFlag){
                 vResult = eval(data);
                 //console.log(vResult);
                 query = 'delete from tbl_ventas where anomes =' + vaniomes +' and id_dms=' + vDatosUsuario.id_dms;
-                if(vResult.length>0){
+                if(vResult.length>0){                    
+                    /*$("#anomesRVtas").empty();
+                    for(j=0;j<vResult.length; j++){
+                        if (aniomes_cb != parseInt(vResult[j].aniomes))
+                        {   
+                            aniomes_cb = parseInt(vResult[j].aniomes);
+                            if (j==0){
+                                $('#anomesRVtas').append('<option value="' + vResult[j].aniomes + '" selected="selected">'+ vResult[j].aniomes +'</option>');
+                            }else{
+                                $('#anomesRVtas').append('<option value="' + vResult[j].aniomes + '">'+ vResult[j].aniomes +'</option>');
+                            }
+                        }
+                    }
+                    $('#anomesRVtas').val(vaniomes);
+                    $('#anomesRVtas').selectmenu("refresh"); */
+
                     ejecutaSQL(query, 0);                    
                     setTimeout(function(){
                         for(i=0; i<vResult.length; i++){
@@ -1933,7 +1915,27 @@ function reloadVentas(vaniomes, vFlag){
                             //console.log(query);
                             ejecutaSQL(query, 0);
                         }
-                    setTimeout(function(){ if(vFlag==0) {reporteVentas(vaniomes)}else{cierresDiarios(vFech)};}, 3000);
+                        setTimeout(function(){ if(vFlag==0) {reporteVentas(vaniomes)}else{cierresDiarios(vFech)};}, 3000);
+                        setTimeout(function(){
+                            db.transaction(function(cmd){ 
+                                cmd.executeSql('SELECT distinct anomes FROM tbl_ventas order by anomes asc', [], function (cmd, results) {
+                                    var len = results.rows.length;
+                                    if(len>0){ $("#anomesRVtas").empty(); $('#anomesRVtas').append('<option value="' + 0 + '" selected="selected">-</option>'); }
+                                    for(j=0;j<len;j++){
+                                        aniomes_cb=results.rows[j].anomes;
+                                        if(parseInt(aniomes_cb)==parseInt(aniomesact)){
+                                            flag_mes_ac = 1;
+                                        }
+                                        $('#anomesRVtas').append('<option value="' + results.rows[j].anomes + '">'+ results.rows[j].anomes +'</option>');
+                                    }  
+                                    if(flag_mes_ac==0){ 
+                                        $('#anomesRVtas').append('<option value="' + aniomesact + '" selected="selected">'+ aniomesact +'</option>');
+                                    }                  
+                                    $("#anomesRVtas").val(aniomes_cb);
+                                    $("#anomesRVtas").selectmenu('refresh');
+                                });
+                            });
+                        },800);
                     }, 1000);
                 }
             }, 
@@ -1945,12 +1947,13 @@ function reloadVentas(vaniomes, vFlag){
                     theme: 'a',
                     html: '<span><center><img src="img/noconection.png" width="60px" /></center><br />Servidor no responde.<br />Error de Coneccion</span>'
                 });
+
+
+                setTimeout(function(){ $.mobile.loading('hide'); }, 1500);
             },
-            /*complete: function(e){
-                setTimeout(function(){  
-                    $.mobile.loading('hide'); 
-                }, 2000);
-            }*/
+            complete: function(e){
+                
+            }
         });  
     }
 }
@@ -1980,13 +1983,869 @@ function drawChart1(dvChart, vTitle, vStitle, vUnit, vSeries, vCats){
     str += '        lineWidth: 0,';
     str += '        min: 0';
     str += '    },';
-    str += '    tooltip: {';
+    str += '    tooltip: {formatter: function () {';
+    str += '                    var vUnit2 = \'\';';
+    str += '                    var strn = \'\';';
+    str += '                    if(dvChart == \'dvChartVtas\'){';
+    str += '                    if(this.key.toUpperCase()==\'SIMCARDS\' || this.key.toUpperCase()==\'SMARTHPONES\'){';
+    str += '                        vUnit2 = \'UND\';';
+    str += '                    }else{';
+    str += '                        vUnit2 = vUnit;';
+    str += '                    }}else{ vUnit2 = vUnit; }';
+    str += '                    strn = \'<span style="color:\' + this.color +\'">\' + this.key +\': <b>\' + this.y + \'</b> \'+ vUnit2 + \'<br/>\';';
+    str += '                    return strn;';
+    str += '                } },';
+
+    /*{';
     str += '        shared: true,';
     str += '        pointFormat: \'<span style="color:{series.color}">{series.name}: <b>\' + vUnit + \' {point.y:,.0f}</b><br/>\'';
-    str += '    },';
+    str += '    },';*/
     str += '    series: vSeries';
     str += '});';
 
 
     eval(str);
+}
+
+function initMap(lat, lng){
+    var mapOptions = {
+        center: new google.maps.LatLng(lat, lng),
+        zoom: 10,
+        mapTypeId: google.maps.MapTypeId.ROADMAP
+    };
+
+    map = new google.maps.Map(document.getElementById("mapHorus"), mapOptions); 
+
+    var latLong = new google.maps.LatLng(lat, lng);
+    markHorus = new google.maps.Marker({
+        position: latLong,
+        map:map
+    });
+
+    setMark(lat, lng);
+}
+
+
+/* calcular distancia entre 2 coordenadas en Kmts*/
+function getDistanceFromLatLonInKm(lat1,lon1,lat2,lon2) {
+  var R = 6371; // Radius of the earth in km
+  var dLat = deg2rad(lat2-lat1);  // deltaphi
+  var dLon = deg2rad(lon2-lon1);  // deltalambda
+
+  var phi1 = deg2rad(lat1);
+  var phi2 = deg2rad(lat2)
+  var a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(phi1) * Math.cos(phi2) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2)
+    ; 
+
+  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+  var d = R * c; // Distance in km
+
+  return d.toFixed(2);
+}
+
+
+function deg2rad(deg) {
+  return deg * (Math.PI/180)
+}
+
+function getFechFormated(vNumFech){
+    var vReturn;
+    var vAnio = vNumFech.toString().substr(0,4);
+    var vMesNum = vNumFech.toString().substr(4,2);
+    var vDia = vNumFech.toString().substr(6,2);
+    var vHh = vNumFech.toString().substr(8,2);
+    var vMn = vNumFech.toString().substr(10,2);
+
+    vStrMes = getMonthName(parseInt(vMesNum));
+
+    vReturn = vAnio + '-' + vStrMes + '-'+ vDia + ' ' + vHh +':'+ vMn;
+
+    return  vReturn;
+}
+
+function cierreVtasDiaria(vFlagCierre, vFlagRes){
+    if(vFlagCierre==0){
+        strHtml = '<div style="border:solid 1px gray; padding:20px; border-radius:15px"><lable>Seguro quieres efectuar cierre de ventas diario ?</label>';
+        strHtml += '<table width="100%">';
+        strHtml += '<tr><td><button class="ui-btn ui-corner-all ui-btn-b" onclick="cierreVtasDiaria(1,1)">Si</button></td>';
+        strHtml += '<td><button class="ui-btn ui-corner-all ui-btn-a" onclick="cierreVtasDiaria(1,0)">No</button></td>';
+        strHtml += '</tr></table></div>';
+
+        $.mobile.loading( 'show', {
+                    text: '',
+                    textVisible: true,
+                    textonly:true,
+                    theme: 'a',
+                    html: strHtml
+                });
+    }else{
+        if(vFlagRes==1){
+            sendCierreVtas();
+        }else{            
+            $.mobile.loading('hide');
+        }
+
+    }
+}
+
+function sendCierreVtas(){
+    $.mobile.loading('show');
+    console.log('enviando cierre');
+    $.ajax({
+            url:ws_url,
+            type:'POST',
+            data:{m:306,vx:userWS, vy:pdwWS, ui:vDatosUsuario.user},        
+            dataType:'text',
+            success: function(data){
+                vResult = data;
+                if(vResult!=='SUCCESS'){
+                    $.mobile.loading( 'show', {
+                        text: '',
+                        textVisible: true,
+                        textonly:true,
+                        theme: 'a',
+                        html: '<span><center><img src="img/noconection.png" width="60px" /></center><br />Error al intentar guardar informacion.</span>'
+                    });
+                }else{
+                    $.mobile.loading( 'show', {
+                        text: '',
+                        textVisible: true,
+                        textonly:true,
+                        theme: 'a',
+                        html: '<span><center>Guardado Exitosamente</center></span>'
+                    });
+                }
+                //console.log(vResult);                
+            }, 
+            error: function(error){
+                $.mobile.loading( 'show', {
+                    text: '',
+                    textVisible: true,
+                    textonly:true,
+                    theme: 'a',
+                    html: '<span><center><img src="img/noconection.png" width="60px" /></center><br />Servidor no responde.<br />Error de Coneccion</span>'
+                });
+            },
+            complete: function(e){                
+                setTimeout(function(){ $.mobile.loading('hide'); }, 1500);
+            }
+        });  
+}
+
+function getPlanningDMS(){
+    var vResult;
+    var weekNum;
+    var fech = new Date();
+    var vQry= '';
+
+    weekNum = getWeekNumber(fech);
+
+    $.mobile.loading('show');
+    $.ajax({
+            url:ws_url,
+            type:'POST',
+            data:{m:310,vx:userWS, vy:pdwWS, ui:vDatosUsuario.user.toUpperCase()},        
+            dataType:'text',
+            success: function(data){
+                vResult = eval('(' +data+')');                
+                //console.log(vResult);
+                if(vResult.plan.length>0){
+                    vQry = 'delete from tbl_plan_dms where aniomes='+ getYMD(0).substr(0,6) +' and upper(usuario)=\'' + vDatosUsuario.user.toUpperCase() + '\' and semana_anio=' + weekNum[1] ;
+                    //console.log(vQry);
+                    ejecutaSQL(vQry, 0);
+                    setTimeout(function(){
+                        //console.log(vResult.length);
+                        for(i=0; i<vResult.plan.length; i++){
+                            query = 'insert into tbl_plan_dms(aniomes, semana_anio, usuario, cod_empleado_dms, circuit, nombre_circuito, id_pdv, nombre_pdv, dias_semana, ymd_dia) values(';
+                            query += vResult.plan[i].aniomes + ',';
+                            query += vResult.plan[i].semana_anio + ',';
+                            query += '\'' + vResult.plan[i].usuario + '\',';
+                            query += vResult.plan[i].cod_empleado_dms + ',';
+                            query += vResult.plan[i].circuit + ',';
+                            query += '\'' + vResult.plan[i].nombre_circuito + '\',';
+                            query += vResult.plan[i].id_pdv + ',';
+                            query += '\'' + vResult.plan[i].nombre_pdv + '\',';
+                            query += '\'' + vResult.plan[i].dias_semana + '\',';
+                            query += vResult.plan[i].ymd_dia + ')';
+                            ejecutaSQL(query, 0);
+                        }
+
+                        //Insert Fichas PDVs
+                        for(i=0; i<vResult.fichas.length; i++){
+                            ejecutaSQL('delete from tbl_ficha_pdv where id_pdv =' + vResult.fichas[i].id_pdv , 0);
+                        }
+                        
+                        setTimeout(function(){
+                            for(i=0; i<vResult.fichas.length; i++){
+                                query = 'INSERT INTO tbl_ficha_pdv(id_pdv, nombre_pdv, duenio, dir, mbl_epin, mbl_tmy, segmento_pop) values(';
+                                query += vResult.fichas[i].id_pdv + ',';
+                                query += '\'' + vResult.fichas[i].nombre + '\',';
+                                query += '\'' + vResult.fichas[i].duenio + '\',';
+                                query += '\'' + vResult.fichas[i].dir + '\',';
+                                query += '\'' + vResult.fichas[i].epin + '\',';
+                                query += '\'' + vResult.fichas[i].tmy + '\',';
+                                query += '\'' + vResult.fichas[i].segmento + '\')';
+                                ejecutaSQL(query, 0);
+                            }
+                        }, 3000);
+                            
+                        
+                        showPlanSemana(weekNum[1], getYMD(0).toString().substr(0,6));
+                    }, 800);
+                    
+                } else{
+                    setTimeout(function(){ $.mobile.loading('hide'); }, 1500);
+                }              
+            }, 
+            error: function(error){
+                $.mobile.loading( 'show', {
+                    text: '',
+                    textVisible: true,
+                    textonly:true,
+                    theme: 'a',
+                    html: '<span><center><img src="img/noconection.png" width="60px" /></center><br />Error Consultando al Server</span>'
+                });
+
+                setTimeout(function(){$.mobile.loading('hide');},1500);
+            },
+            complete: function(e){    
+                //console.log(e);            
+                //setTimeout(function(){ $.mobile.loading('hide'); }, 1500);
+                    var anioCb = getYMD(0).toString().substr(0,4);
+                    setTimeout(function(){
+                    db.transaction(function(cmd){ 
+                        cmd.executeSql('SELECT distinct semana_anio FROM tbl_plan_dms where substr(aniomes,1,4)=?', [anioCb], function (cmd, results) {
+                            var len = results.rows.length;
+                            if(len>0){ $("#cbSemanaNum").empty(); $('#cbSemanaNum').append('<option value="' + 0 + '" selected="selected">-</option>'); }
+                            for(j=0;j<len;j++){
+                                //console.log(results.rows[i].semana_anio);
+                                $('#cbSemanaNum').append('<option value="' + results.rows[j].semana_anio + '" selected="selected">'+ results.rows[j].semana_anio +'</option>');
+                            }
+                            //console.log('Cb Done');
+                            $('#cbSemanaNum').selectmenu("refresh");
+                        });
+                        });
+                    },5000);
+                }
+            }); 
+}
+
+function showPlanSemana(vNumSemana,vAniomes){
+
+    var vStrHtml='';
+    setTimeout(function(){$.mobile.loading('show');},100);
+
+    db.transaction(function(cmd){ 
+        cmd.executeSql('SELECT semana_anio, dias_semana, ymd_dia, count(id_pdv) as cant_pdvs FROM tbl_plan_dms where semana_anio=? and aniomes=? group by semana_anio, dias_semana, ymd_dia order by ymd_dia', [parseInt(vNumSemana), parseInt(vAniomes)], function (cmd, results) {
+            var len = results.rows.length;
+            vStrHtml = '<table style="font-size:0.85em" width="100%" data-role="table" data-mode="columntoggle" class="table-stripe ui-responsive">';
+            vStrHtml += '<thead><tr><th width="35%">Dia</th><th width="30%">Fecha</th><th>Cant PDVs.</th></tr></thead>';
+            vStrHtml += '<tbody>';
+
+            //console.log('Getting Data ' + len);
+            if(len>0){                    
+                for(i=0; i<len; i++){                    
+                    vStrHtml += '<tr><td>'+ results.rows[i].dias_semana +'</td><td style="text-align:center">'+ results.rows[i].ymd_dia +'</td><td style="text-align:center"><a href="#" onclick="showPdvs('+results.rows[i].ymd_dia+')">'+ results.rows[i].cant_pdvs +'</a></td></tr>';
+                    //console.log(i);
+                }                
+            }
+            vStrHtml += '</tbody> </table>';
+            $("#dvPlanSemanal").html(vStrHtml);
+            $("#dvPlanSemanal").trigger('create');
+            //console.log('Sowing Table');
+            $("#dvPlanPDVs").html('');
+            $("#dvPlanPDVs").trigger('create');
+            setTimeout(function(){ $.mobile.loading('hide'); }, 1500);
+        });
+    });
+}
+
+function showPdvs(ymd){
+    var vStrHtml='';
+    setTimeout(function(){$.mobile.loading('show');},100);
+
+    db.transaction(function(cmd){   
+        cmd.executeSql('SELECT id_pdv, nombre_pdv, nombre_circuito FROM tbl_plan_dms where ymd_dia=? order by nombre_pdv', [parseInt(ymd)], function (cmd, results) {
+            var len = results.rows.length;
+            vStrHtml = '<h3>PDVs Plan '+ getFechFormated(ymd) +'</h3>'
+            vStrHtml += '<input type="search" id="finderPDv1" onkeyup="funcTblFindPdv()" placeholder="nombre pdv"/>'
+            vStrHtml += '<table id="pdvsTble1" style="font-size:0.85em" width="100%" data-role="table" data-mode="columntoggle" class="table-stripe ui-responsive">';
+            vStrHtml += '<thead><tr><th width="5%">#</th><th width="10%">Id Pdv</th><th data-priority="2" width="10%">Circuito</th><th width="30%">Nombre</th></tr></thead>';
+            vStrHtml += '<tbody>';
+
+            
+            if(len>0){                    
+                for(i=0; i<len; i++){                    
+                    vStrHtml += '<tr><td>'+ (i+1) +'</td><td><a href="#" onclick="fichaPDV('+ results.rows[i].id_pdv +')">'+ results.rows[i].id_pdv +'</a></td><td>'+ results.rows[i].nombre_circuito +'</td><td>'+ results.rows[i].nombre_pdv +'</td></tr>';
+                }                
+            }
+            vStrHtml += '</tbody> </table>';
+            $("#dvPlanPDVs").html(vStrHtml);
+            $("#dvPlanPDVs").trigger('create');
+
+            $('html, body').animate({
+                scrollTop: $("#dvPlanPDVs").offset().top - 130
+            }, 1000);
+
+            setTimeout(function(){ $.mobile.loading('hide'); }, 1500);
+        });
+    });
+}
+
+
+function getWeekNumber(d) {
+    // Copy date so don't modify original
+    d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    // Set to nearest Thursday: current date + 4 - current day number
+    // Make Sunday's day number 7
+    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+    // Get first day of year
+    var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+    // Calculate full weeks to nearest Thursday
+    var weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
+    // Return array of year and week number
+    return [d.getUTCFullYear(), weekNo];
+}
+
+function funcTblFindPdv() {
+  var input, filter, table, tr, td, i;
+  input = document.getElementById("finderPDv1");
+  filter = input.value.toUpperCase();
+  table = document.getElementById("pdvsTble1");
+  tr = table.getElementsByTagName("tr");
+  for (i = 0; i < tr.length; i++) {
+    td = tr[i].getElementsByTagName("td")[3];
+    if (td) {
+      if (td.innerHTML.toUpperCase().indexOf(filter) > -1) {
+        tr[i].style.display = "";
+      } else {
+        tr[i].style.display = "none";
+      }
+    }       
+  }
+}
+
+function funcTblFindPdv2() {
+  var input, filter, table, tr, td, i;
+  input = document.getElementById("finderPDv2");
+  filter = input.value.toUpperCase();
+  table = document.getElementById("pdvsTble2");
+  tr = table.getElementsByTagName("tr");
+  for (i = 0; i < tr.length; i++) {
+    td = tr[i].getElementsByTagName("td")[3];
+    if (td) {
+      if (td.innerHTML.toUpperCase().indexOf(filter) > -1) {
+        tr[i].style.display = "";
+      } else {
+        tr[i].style.display = "none";
+      }
+    }       
+  }
+}
+
+function findPDVFordis(vFlag){
+    var vHtml = '';
+    var fech_dtos = getYMD(0).substr(0,6);
+    var vCircuitos = [];
+    if(vFlag==0){        
+        try{
+        var dvListx= document.getElementById('dvListPDVs');
+        document.getElementById('dv_forms_template').removeChild(dvListx);
+        }catch(e){null};
+        var h = $(window).height();
+        var dvList = document.createElement('div');
+        dvList.id = 'dvListPDVs';
+
+        setTimeout(function(){$.mobile.loading('show');},100);
+
+        db.transaction(function(cmd){   
+            cmd.executeSql('SELECT distinct id_pdv, nombre_pdv, nombre_circuito FROM tbl_plan_dms where aniomes=? order by nombre_circuito,nombre_pdv', [parseInt(fech_dtos)], function (cmd, results) {
+                var len = results.rows.length;
+                
+                if(len>0){  
+                    for(k=0;k<len;k++){
+                        if(vCircuitos.indexOf(results.rows[k].nombre_circuito)==-1){
+                            vCircuitos.push(results.rows[k].nombre_circuito);
+                        }
+                    }
+
+                    vStrHtml = '<br /><br /><button style="width:100px; height:30px; padding:0px" onclick="findPDVFordis(1)">Cerrar</button><h3>PDVs Planning</h3>';
+                    vStrHtml += '<input type="search" id="finderPDv2" onkeyup="funcTblFindPdv2()" placeholder="nombre pdv"/>';
+                    vStrHtml += '<label>Circuito</label><select id="cbCirPlanPDV" onchange="changCircSearchPlan(this)" data-mini="true">';
+                    vStrHtml += '<option value="">-</option>'
+                    for(k=0;k<vCircuitos.length;k++){
+                        vStrHtml += '<option value="'+ vCircuitos[k] +'">'+vCircuitos[k]+'</option>';
+                    }
+                    vStrHtml += '</select>';
+                    vStrHtml += '<table id="pdvsTble2" style="font-size:0.85em" width="100%" data-role="table" data-mode="columntoggle" class="table-stripe ui-responsive">';
+                    vStrHtml += '<thead><tr><th width="5%">#</th><th width="10%">Id Pdv</th><th data-priority="2" width="10%">Circuito</th><th width="30%">Nombre</th></tr></thead>';
+                    vStrHtml += '<tbody>';                  
+                    for(i=0; i<len; i++){                    
+                        vStrHtml += '<tr><td style="text-align:center">'+ (i+1) +'</td><td><a href="#" onclick="setPDVFordis('+ results.rows[i].id_pdv +')">'+ results.rows[i].id_pdv +'</a></td><td>'+ results.rows[i].nombre_circuito +'</td><td>'+ results.rows[i].nombre_pdv +'</td></tr>';
+                    }                
+                }
+                vStrHtml += '</tbody> </table><br/><br/>';
+                dvList.innerHTML=vStrHtml;  
+                document.getElementById('dv_forms_template').appendChild(dvList);
+                $("#dvListPDVs").css({"left":"-1%","padding":"3%", "width":"96%", "height":h,"background-color":"white","position":"fixed","top":10,"z-index":999,
+                                        "opacity":1, "overflow":"scroll"});
+                $("#dvListPDVs").trigger('create');
+                setTimeout(function(){ $.mobile.loading('hide'); }, 1500);
+            });
+        });
+
+        
+
+    }else{
+        try{
+        var dvListx= document.getElementById('dvListPDVs');
+        document.getElementById('dv_forms_template').removeChild(dvListx);
+        }catch(e){null};
+    }
+
+}
+
+function setPDVFordis(vIdPDV){
+    //console.log(vIdPDV);
+    obj = document.getElementById('Q2');
+    obj.value = vIdPDV;
+    findPDVFordis(1);
+}
+
+function changCircSearchPlan(vobj){
+    var input, filter, table, tr, td, i;
+    input = vobj
+    filter = input.value.toUpperCase();
+    //console.log(filter);
+    table = document.getElementById("pdvsTble2");
+    tr = table.getElementsByTagName("tr");
+    for (i = 0; i < tr.length; i++) {
+        td = tr[i].getElementsByTagName("td")[2];
+        if (td) {
+            if (td.innerHTML.toUpperCase().indexOf(filter) > -1) {
+                tr[i].style.display = "";
+            } else {
+                tr[i].style.display = "none";
+            }
+        }       
+    }
+}
+
+function getDatosUsuario(){
+    var vQry='';
+    $.mobile.loading('show');
+    try{
+    $.ajax({
+            url:ws_url,
+            type:'POST',
+            data:{m:204,vx:userWS, vy:pdwWS, ui:vDatosUsuario.user.toUpperCase()},        
+            dataType:'text',
+            success: function(data){
+                vResult = eval(data);
+                //console.log(vResult); 
+                if(vResult.length>0){
+                    vQry = 'UPDATE users ';
+                    vQry += ' set name = \'' + vResult[0].name + '\',';
+                    vQry += ' phone = ' + vResult[0].phone + ',';
+                    vQry += ' email = \'' + vResult[0].email + '\',';
+                    vQry += ' job_title = \'' + vResult[0].job + '\',';
+                    vQry += ' type = ' + vResult[0].perfil + ',';
+                    vQry += ' id_dms = ' + vResult[0].id_dms + ',';
+                    vQry += ' license = ' + vResult[0].license;                    
+                    vQry += ' ,id_pdv_dlr = ' + vResult[0].dlr_pdv_dms;
+                    //console.log(vQry);
+                    ejecutaSQL(vQry,0);
+                    setTimeout(function(){
+                        show_datos_user(vDatosUsuario.user);
+                    },1000);
+                }
+                
+            }, 
+            error: function(error){
+                $.mobile.loading( 'show', {
+                    text: '',
+                    textVisible: true,
+                    textonly:true,
+                    theme: 'a',
+                    html: '<span><center><img src="img/noconection.png" width="60px" /></center><br />Error Consultando al Server</span>'
+                });
+
+                //setTimeout(function(){$.mobile.loading('hide');},1500);
+            },
+            complete: function(e){  
+                setTimeout(function(){$.mobile.loading('hide');},2000);
+            }
+    }); 
+    }catch(e){ $.mobile.loading( 'show', {
+                    text: 'Error de Coneccion',
+                    textVisible: true,
+                    textonly:true,
+                    theme: 'a'
+                });}
+}
+
+function fichaPDV(vIDPdv){
+    //console.log(vIDPdv);
+    var vHTML = '';
+    db.transaction(function(cmd){   
+        cmd.executeSql('SELECT * FROM tbl_ficha_pdv where id_pdv=?', [parseInt(vIDPdv)], function (cmd, results) {
+            var len = results.rows.length;            
+            if(len>0){  
+                vHTML ='<label style="display:block; font-size:0.9em; margin-top:10px" id="id_dms_user" >'+ results.rows[0].id_pdv +'</label> ';
+                vHTML +='<label style="display:block; color:#848484; font-size:0.8em; margin-bottom:10px; margin-top:-3px">Id PDV</label>';
+                vHTML +='<label style="display:block; font-size:0.9em;" id="num_tel">'+ results.rows[0].nombre_pdv +'</label> ';
+                vHTML +='<label style="display:block; color:#848484; font-size:0.8em; margin-bottom:10px; margin-top:-3px">Nombre PDV</label>';
+                vHTML +='<label style="display:block;font-size:0.9em;" id="name_user">'+ results.rows[0].duenio +'</label> ';
+                vHTML +='<label style="display:block; color:#848484; font-size:0.8em; margin-bottom:10px; margin-top:-3px">Dueño</label> ';
+                vHTML +='<label style="display:block;font-size:0.9em;" id="job_user">'+ results.rows[0].dir +'</label> ';
+                vHTML +='<label style="display:block; color:#848484; font-size:0.8em; margin-bottom:10px; margin-top:-3px">Direccion</label> ';
+                vHTML +='<label style="display:block;font-size:0.9em;" id="uid_user">'+ results.rows[0].mbl_epin +'</label> ';
+                vHTML +='<label style="display:block; color:#848484; font-size:0.8em; margin-bottom:10px; margin-top:-3px">MBL EPIN</label>';
+                vHTML +='<label style="display:block;font-size:0.9em;" id="uid_user">'+ results.rows[0].mbl_tmy +'</label> ';
+                vHTML +='<label style="display:block; color:#848484; font-size:0.8em; margin-bottom:10px; margin-top:-3px">MBL TMY</label>';
+                vHTML +='<label style="display:block;font-size:0.9em;" id="uid_user">'+ results.rows[0].segmento_pop +'</label> ';
+                vHTML +='<label style="display:block; color:#848484; font-size:0.8em; margin-bottom:10px; margin-top:-3px">Segmento</label>';
+                vHTML +='<button id="btnfds04" data-theme="b" style="margin-left:60%; width:100px; height:35px; padding:0px" onclick="makeFordis04('+results.rows[0].id_pdv+')">Fordis04</button>';
+                
+                $("#dvFichaPDV").html(vHTML);
+                $("#dvFichaPDV").trigger('create');
+                $('html, body').animate({
+                    scrollTop: $("#dvFichaPDV").offset().top - 130
+                }, 1000);
+                //console.log(results.rows[0].nombre_pdv);
+            }
+        });
+    });
+}
+
+function makeFordis04(vPDV){
+    //console.log(vPDV);
+    desplegarForm('FORDIS04');
+    setTimeout(function(){
+        $("#Q2").val(vPDV);
+        $('html, body').animate({
+            scrollTop: 0
+        }, 800);
+    },800);
+}
+
+function validaPerfil(){
+    //console.log(vDatosUsuario.perfil);
+    if(vDatosUsuario.perfil == 210){        
+        $("#mnHorus").hide();
+        $("#mnForms").hide();
+        $("#mnRptVtas").hide();
+        $("#mnDmsPlanin").hide();
+        $("#dvFormsDet").hide();        
+        $("#btnCvta").hide();
+        $("#dvDMS").show();
+        $("#mnRptG").show(); 
+        //$("#dvMainGerencial").show();
+
+    }else if(vDatosUsuario.perfil == 201){
+        $("#mnHorus").show();
+        $("#mnForms").show();
+        $("#mnRptVtas").show();
+        $("#mnDmsPlanin").show();        
+        $("#mnRptG").show();    
+        $("#dvDMS").show(); 
+        $("#dvFormsDet").show(); 
+        $("#btnCvta").show();
+        $("#dvMainGerencial").hide();     
+    }
+    else{
+        $("#mnHorus").show();
+        $("#mnForms").show();
+        $("#mnRptVtas").show();
+        $("#mnDmsPlanin").show();
+        $("#dvFormsDet").show();
+        $("#btnCvta").show();
+        $("#mnRptG").hide();         
+        $("#dvMainGerencial").hide(); 
+    }
+}
+
+
+
+//funcion para obtener ejecuion por sucirsal Reportes Gerenciales
+function getDtosG(){
+    var vStrHtml='';
+    var vmesDtos = $("#cbAnomesSucs").val();
+    $.mobile.loading('show');
+    $.ajax({
+            url:ws_url,
+            type:'POST',
+            data:{m:104,vx:userWS, vy:pdwWS, id_dealer:vDatosUsuario.id_pdv_dlr, anomes:vmesDtos},        
+            dataType:'text',
+            success: function(data){
+                vResult = eval(data);
+                //console.log(vResult); 
+                if(vResult.length>0){
+                    ejecutaSQL('DELETE FROM tbl_ejec_sucursales WHERe anomes=' + vmesDtos,0);
+                    for(i=0; i<vResult.length; i++){ 
+                        vQry = 'INSERT INTO tbl_ejec_sucursales(anomes, id_dealer, nombre_dealer, id_sucursal, nombre_sucursal, producto, ejecucion, meta, res, unidad)';
+                        vQry += ' VALUES(' + vResult[i].anomes + ',';
+                        vQry += vResult[i].id_dealer + ',';
+                        vQry += '\'' + vResult[i].nombre_dealer + '\',';
+                        vQry += vResult[i].id_sucursal + ',';
+                        vQry += '\'' + vResult[i].nombre_sucursal + '\',';
+                        vQry += '\'' + vResult[i].producto + '\',';
+                        vQry +=  vResult[i].ejecucion + ',';
+                        vQry +=  vResult[i].meta + ',';
+                        vQry +=  vResult[i].res + ',';
+                        vQry += '\'' + vResult[i].unidad + '\')';
+                        //console.log(vQry);
+                        ejecutaSQL(vQry,0);
+                    }  
+                    setTimeout(function(){ showDatosSucursales(vDatosUsuario.id_pdv_dlr, vmesDtos, $("#cbProductoDashG").val()) }, 3000);                  
+                }
+                
+            }, 
+            error: function(error){
+                $.mobile.loading( 'show', {
+                    text: '',
+                    textVisible: true,
+                    textonly:true,
+                    theme: 'a',
+                    html: '<span><center><img src="img/noconection.png" width="60px" /></center><br />Error Consultando al Server</span>'
+                });
+
+                //setTimeout(function(){$.mobile.loading('hide');},1500);
+            },
+            complete: function(e){  
+                setTimeout(function(){$.mobile.loading('hide');},2000);
+            }
+    }); 
+}
+
+function showDatosSucursales(idDealer, anomes, vproduc){
+    var vStrHtml='';
+    //console.log(vproduc + anomes);
+    vStrHtml = '<table style="font-size:0.8em" width="100%" data-role="table" data-mode="columntoggle" class="table-stripe ui-responsive">';
+    vStrHtml += '<thead><tr><th width="45%">Sucursal</th><th data-priority=1>Unidad</th><th>Ejec.</th><th data-priority=2>Meta</th><th data-priority=1>Res.</th></tr></thead>';
+    vStrHtml += '<tbody>';
+
+    db.transaction(function(cmd){   
+        cmd.executeSql('SELECT * FROM tbl_ejec_sucursales where anomes=? and id_dealer=? and producto=?', [parseInt(anomes), parseInt(idDealer), vproduc], function (cmd, results) {
+            var len = results.rows.length;    
+            //console.log(len);        
+            if(len>0){                     
+                for(i=0; i<len; i++){    
+                    vStrHtml += '<tr><td><a href="#" onclick="detallSucursal('+results.rows[i].id_sucursal+')">'+ results.rows[i].nombre_sucursal  +'</a></td><td>'+ results.rows[i].unidad +'</td><td style="text-align:right">'+ parseFloat(results.rows[i].ejecucion).toLocaleString('en') +'</td><td style="text-align:right">'+ parseFloat(results.rows[i].meta).toLocaleString('en') +'</td><td style="text-align:right">'+ results.rows[i].res +' %</td></tr>';      
+                }                
+            }
+            vStrHtml += '</tbody> </table>';
+            $("#dvTblEjeSuc").html(vStrHtml);
+            $("#dvTblEjeSuc").trigger('create');
+
+            $.mobile.loading('hide');
+        });
+    });
+}
+
+function changeProduct(){
+
+    $.mobile.loading('show');
+    $("#dvDetSucursal").html('');
+    $("#dvDetSucursalDiario").html('');
+
+    showDatosSucursales(vDatosUsuario.id_pdv_dlr, $("#cbAnomesSucs").val(), $("#cbProductoDashG").val());
+}
+
+function detallSucursal(vIdSucursal){
+    //console.log(vIdSucursal + $("#cbAnomesSucs").val());
+    var arrCats = [];
+    var arrSeries = [];
+    var ejec = [];
+    var metas = [];
+
+    $.mobile.loading('show');
+    db.transaction(function(cmd){   
+        cmd.executeSql('SELECT * FROM tbl_ejec_sucursales where anomes=? and id_sucursal=? order by producto', [parseInt($("#cbAnomesSucs").val()), parseInt(vIdSucursal)], function (cmd, results) {
+            var len = results.rows.length;    
+            //console.log(len);        
+            if(len>0){                     
+                for(i=0; i<len; i++){  
+                    if(arrCats.indexOf(results.rows[i].producto)==-1){
+                        arrCats.push(results.rows[i].producto);
+                        ejec.push(results.rows[i].ejecucion);
+                        metas.push(results.rows[i].meta);
+                    }
+                }                  
+
+                //console.log(arrCats);    
+                Highcharts.chart('dvDetSucursal', {
+                    chart: {
+                        type: 'column'
+                    },
+                    title: {
+                        text: results.rows[0].nombre_sucursal
+                    },
+                    subtitle: {
+                        text: 'Ejecucion vs Meta ' + $("#cbAnomesSucs").val()
+                    },
+                    xAxis: {
+                        categories: arrCats,
+                        crosshair: true
+                    },
+                    yAxis: {
+                        min: 0,
+                        title: {
+                            text: '' 
+                        }
+                    },
+                    tooltip:{formatter: function () {
+                        //console.log(this);
+                        var vUnit2 = '';
+                        var strn = '';
+                        var serie_name = '';
+
+                        strn += '<span style="font-size:1em;">'+  this.x + '</span><br/><table>';
+                        for(i=0; i< this.points.length; i++){
+                            if(this.points[i].key.toUpperCase()=='SIMCARDS' || this.points[i].key.toUpperCase()=='SMARTPHONES'){
+                                vUnit2 = 'UND'
+                            }else{
+                                vUnit2 = 'HNL';
+                            }
+                            strn += '<tr><td style="color:' + this.points[i].color + '; padding:0;">' + this.points[i].series.name + ': </td>';
+                            strn += '<td style="padding:0"><b>' + this.points[i].y.toLocaleString('en') +' '+ vUnit2 +'</b></td></tr>';
+
+                        }
+                        return strn;  
+                    }, shared:true, useHTML:true },
+                    /*{
+                        headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+                        pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+                            '<td style="padding:0"><b>{point.y:.1f}</b></td></tr>',
+                        footerFormat: '</table>',
+                        shared: true,
+                        useHTML: true
+                    },*/
+
+                    plotOptions: {
+                        column: {
+                            pointPadding: 0.2,
+                            borderWidth: 0
+                        }
+                    },
+                    series: [{
+                        name: 'Ejecucion',
+                        data: ejec
+
+                    }, {
+                        name: 'Meta',
+                        data: metas
+
+                    }]
+                });
+
+
+                $.mobile.loading('show');
+                $.ajax({
+                        url:ws_url,
+                        type:'POST',
+                        data:{m:105,vx:userWS, vy:pdwWS, id_sucursal:vIdSucursal, anomes:$("#cbAnomesSucs").val()},        
+                        dataType:'text',
+                        success: function(data){
+                            vResult = eval(data);
+                            //console.log(vResult); 
+                            if(vResult.length>0){
+                                //console.log(vResult); 
+                                //dasboard2
+                                Highcharts.chart('dvDetSucursalDiario', {
+                                    title: {
+                                        text: results.rows[0].nombre_sucursal
+                                    },
+
+                                    subtitle: {
+                                        text: 'Ejecucion ' + $("#cbAnomesSucs").val()
+                                    },
+
+                                    yAxis: {
+                                        title: {
+                                            text: ''
+                                        }
+                                    },
+                                    legend: {
+                                        layout: 'vertical',
+                                        align: 'right',
+                                        verticalAlign: 'middle'
+                                    },
+
+                                    plotOptions: {
+                                        series: {
+                                            label: {
+                                                connectorAllowed: true
+                                            },
+                                            pointStart:1,
+                                            data:[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31]
+                                        }
+                                    },
+
+                                    series: vResult,
+
+                                    tooltip:{formatter: function () {
+                                        //console.log(this);
+                                        var vUnit2 = '';
+                                        var strn = '';
+                                        var serie_name = '';
+                                        if(this.series.name.toUpperCase()=='SIMCARDS' || this.series.name.toUpperCase()=='SMARTPHONES'){
+                                            vUnit2 = 'UND'
+                                        }else{
+                                            vUnit2 = 'HNL';
+                                        }
+
+                                        strn += '<span style="font-size:1em;">'+  this.series.name + '</span><br/><table>';
+                                        strn += '<tr><td style="color:' + this.color + '; padding:0;">' + this.x + ': </td>';
+                                        strn += '<td style="padding:0"><b>' + this.y.toLocaleString('en') +' '+ vUnit2 +'</b></td></tr>';
+                                        return strn;  
+
+                                    }, useHTML:true },
+
+                                    responsive: {
+                                        rules: [{
+                                            condition: {
+                                                maxWidth: 500
+                                            },
+                                            chartOptions: {
+                                                legend: {
+                                                    layout: 'horizontal',
+                                                    align: 'center',
+                                                    verticalAlign: 'bottom'
+                                                }
+                                            }
+                                        }]
+                                    }
+
+                                });                 
+                            }
+                            
+                        }, 
+                        error: function(error){
+                            $.mobile.loading( 'show', {
+                                text: '',
+                                textVisible: true,
+                                textonly:true,
+                                theme: 'a',
+                                html: '<span><center><img src="img/noconection.png" width="60px" /></center><br />Error Consultando al Server</span>'
+                            });
+
+                            //setTimeout(function(){$.mobile.loading('hide');},1500);
+                        },
+                        complete: function(e){  
+                            setTimeout(function(){$.mobile.loading('hide');},2000);
+                        }
+                }); 
+                
+
+            }
+
+            $.mobile.loading('hide');
+        });
+    });
+
+    
 }
