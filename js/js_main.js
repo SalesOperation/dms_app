@@ -2756,6 +2756,9 @@ function detallSucursal(vIdSucursal){
                                 //console.log(vResult); 
                                 //dasboard2
                                 Highcharts.chart('dvDetSucursalDiario', {
+                                    chart:{
+                                        zoomType: 'x',
+                                    },
                                     title: {
                                         text: results.rows[0].nombre_sucursal
                                     },
