@@ -2625,7 +2625,7 @@ function showDatosSucursales(idDealer, anomes, vproduc){
     var vStrHtml='';
     //console.log(vproduc + anomes);
     vStrHtml = '<table style="font-size:0.8em" width="100%" data-role="table" data-mode="columntoggle" class="table-stripe ui-responsive">';
-    vStrHtml += '<thead><tr><th width="45%">Sucursal</th><th data-priority=1>Unidad</th><th>Ejec.</th><th data-priority=2>Meta</th><th data-priority=1>Res.</th></tr></thead>';
+    vStrHtml += '<thead><tr><th width="46%">Sucursal</th><th data-priority=1>Unidad</th><th>Ejec.</th><th data-priority=2>Meta</th><th data-priority=1>Res.</th></tr></thead>';
     vStrHtml += '<tbody>';
 
     db.transaction(function(cmd){   
