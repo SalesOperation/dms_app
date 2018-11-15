@@ -1,6 +1,6 @@
 <widget xmlns="http://www.w3.org/ns/widgets" xmlns:gap="http://phonegap.com/ns/1.0" id="amg.dev.dmsapp" version="1.0.0">
-  <name>S.O. DMS EXPERIENCE</name>
-  <description>S.O. DMS EXPERIENSE APP</description>
+  <name>S.O. DMS Experience HN</name>
+  <description>S.O. DMS EXPERIENSE HN APP</description>
   <author href="#">Arodi Morga</author>
   <content src="index.html"/>
 
