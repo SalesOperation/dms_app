@@ -2634,7 +2634,7 @@ function showDatosSucursales(idDealer, anomes, vproduc){
             //console.log(len);        
             if(len>0){                     
                 for(i=0; i<len; i++){    
-                    vStrHtml += '<tr><td><a href="#" onclick="detallSucursal('+results.rows[i].id_sucursal+')">'+ results.rows[i].nombre_sucursal  +'</a></td><td>'+ results.rows[i].unidad +'</td><td style="text-align:right">'+ parseFloat(results.rows[i].ejecucion).toLocaleString('en') +'</td><td style="text-align:right">'+ parseFloat(results.rows[i].meta).toLocaleString('en') +'</td><td style="text-align:right">'+ results.rows[i].res +' %</td></tr>';      
+                    vStrHtml += '<tr style="font-size:0.9em"><td><a href="#" onclick="detallSucursal('+results.rows[i].id_sucursal+')">'+ results.rows[i].nombre_sucursal  +'</a></td><td>'+ results.rows[i].unidad +'</td><td style="text-align:right">'+ parseFloat(results.rows[i].ejecucion).toLocaleString('en') +'</td><td style="text-align:right">'+ parseFloat(results.rows[i].meta).toLocaleString('en') +'</td><td style="text-align:right">'+ results.rows[i].res +' %</td></tr>';      
                 }                
             }
             vStrHtml += '</tbody> </table>';
@@ -2711,7 +2711,7 @@ function detallSucursal(vIdSucursal){
                                 vUnit2 = 'HNL';
                             }
                             strn += '<tr><td style="color:' + this.points[i].color + '; padding:0;">' + this.points[i].series.name + ': </td>';
-                            strn += '<td style="padding:0"><b>' + this.points[i].y.toLocaleString('en') +' '+ vUnit2 +'</b></td></tr>';
+                            strn += '<td style="padding:0; text-align:right"><b>' + this.points[i].y.toLocaleString('en') +' '+ vUnit2 +'</b></td></tr>';
 
                         }
                         return strn;  
@@ -2800,7 +2800,7 @@ function detallSucursal(vIdSucursal){
 
                                         strn += '<span style="font-size:1em;">'+  this.series.name + '</span><br/><table>';
                                         strn += '<tr><td style="color:' + this.color + '; padding:0;">' + this.x + ': </td>';
-                                        strn += '<td style="padding:0"><b>' + this.y.toLocaleString('en') +' '+ vUnit2 +'</b></td></tr>';
+                                        strn += '<td style="padding:0; text-align:right"><b>' + this.y.toLocaleString('en') +' '+ vUnit2 +'</b></td></tr>';
                                         return strn;  
 
                                     }, useHTML:true },
